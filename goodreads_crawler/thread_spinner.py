@@ -300,106 +300,110 @@ star_assignment['did not like it']  = 1
 #                                   MAIN                                      #
 #-----------------------------------------------------------------------------#
 
-#
-# soup = get_page(url_location+str(book_reference_number))
-#
-# #Get general book info
-# book_info = {}
-#
-# book_info['title'] = soup.select('#bookTitle')[0].text.strip()  #book title
-# book_info['author'] = soup.select('.authorName')[0].text.strip() #author
-# book_info['meta'] = soup.select('#bookMeta')[0].text.strip()   #book meta
-# book_info['details'] = soup.select('#details')[0].text.strip()    #book details (stats)
-#
-# for i,v in enumerate(book_info):
-#     print('Book {0}: {1}'.format(i,v))
-#
-# #Now, step into the 30 reviewers on the first page
-# book_info['reviewers'] = list(soup.select('.user')) #Raw format (not text) of all reviewers, CONVERT TO LIST FOR EASY CONCATENATION
-#
-# #Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
-# time.sleep(.5)
-# close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
-# element = driver.find_element_by_xpath(close_XPATH)
-# element.click()
-# time.sleep(0.95)
-#
-# #Append however many user pages we want to go through!
-# user_page_num = 4
-# for cnt_i in range(user_page_num):
-#     #instead of grabbing href link from the parsed XML, use a selenium click
-#     #won't work otherwise (since it uses a JSON request to get the next page)
-#     element = driver.find_element_by_class_name('next_page')
-#     element.click()
-#
-# curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
-# curr_page_reviews = list(curr_page_soup.select('.user'))
-# book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
-#
-# time.sleep(0.95)  # to avoid the random-length HTML garbage anti-attack mechanism
-#
-#
-#
-# reviewer_info = []
-# for i, curr_user in enumerate(book_info['reviewers']):
-#     print('Reviewer {0} ~~~~~~~~~~~~~~~~~~'.format(i))
-#     reviewer_info.append({})
-#     reviewer_info[i]['name'] = curr_user.attrs['name']
-#     reviewer_info[i]['link'] = curr_user.attrs['href']
-#
-#     #Step into the user's page
-#     goodreads_root = 'https://www.goodreads.com'
-#     t0 = time.time()
-#     user_soup = get_page(goodreads_root + reviewer_info[i]['link'])
-#     t1 = time.time()
-#     dT = t1 - t0
-#     print('user time = {0}'.format(dT))
-#
-#     #fish out the ratings link on the top left hand corner of the user's page
-#     #add it to the dictionary once we have it
-#     try:
-#         reviewer_info[i]['ratings link'] = user_soup.select('.profilePageUserStatsInfo')[0].contents[1].attrs['href']
-#     except:
-#         try:
-#             #Author's page has a different layout type...
-#             reviewer_info[i]['ratings link'] = user_soup.select('.smallText')[0].contents[1].attrs['href']
-#             print('On an authors page!')
-#         except:
-#             #Some people make their profiles private...
-#             user_text = user_soup.select('#privateProfile')[0].text
-#             usertextList = []
-#             usertextList.append( user_text.split('This')[1][1:20] )
-#             usertextList.append( user_text.split('Sign in to ')[1].split('\n')[0] )
-#
-#             print('On a private page, so no content available')
-#             print('From users page: {0}, {1}'.format(usertextList[0], usertextList[1]))
-#             print('skipping to next reviewer')
-#             continue
-#
-#
-#     #Step into the user's ratings page
-#     #NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
-#     t0 = time.time()
-#     # ratings_soup = get_page(goodreads_root + reviewer_info[i]['ratings link'])
-#     # ratings_soup = get_page_inf_scroll(goodreads_root + reviewer_info[i]['ratings link'])
-#     ratingsList, ratingsScore_AVG, ratingsScore_OWN  = get_page_inf_scroll(goodreads_root + reviewer_info[i]['ratings link'])
-#     t1 = time.time()
-#     dT = t1 - t0
-#     print('ratings time = {0}'.format(dT))
-#
-#     #iterate through all of the ratings, add it to the dictionary as a list of dictionaries (each one being the rating)
-#     #TODO: Figure out basic proxy gathering/proxy list for multithreading scraping
-#     #TODO: Once a basic 30x30 structure is saved, flesh out basics for net-creation algorithm
-#     #TODO: Get a prototype going
-#     #TODO: figure out how to make the javascript page scroll down to refesh to get all the ratings
-#
-#
-#     reviewer_info[i]['ratings'] = []
-#     for j in range(len(ratingsList)):
-#         reviewer_info[i]['ratings'].append(ratingsList[j])
-#         book_AVG_score = ratingsScore_AVG[j] #currently not used...include in the book node in the future
-#         reviewer_info[i]['ratings'][j]['score'] = ratingsScore_OWN[j]
-#
+
+soup = get_page(url_location+str(book_reference_number))
+
+#Get general book info
+book_info = {}
+
+book_info['title'] = soup.select('#bookTitle')[0].text.strip()  #book title
+book_info['author'] = soup.select('.authorName')[0].text.strip() #author
+book_info['meta'] = soup.select('#bookMeta')[0].text.strip()   #book meta
+book_info['details'] = soup.select('#details')[0].text.strip()    #book details (stats)
+
+for i,v in enumerate(book_info):
+    print('Book {0}: {1}'.format(i,v))
+
+#Now, step into the 30 reviewers on the first page
+book_info['reviewers'] = list(soup.select('.user')) #Raw format (not text) of all reviewers, CONVERT TO LIST FOR EASY CONCATENATION
+
+#Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
+time.sleep(.5)
+close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
+element = driver.find_element_by_xpath(close_XPATH)
+element.click()
+time.sleep(0.95)
+
+#Append however many user pages we want to go through!
+user_page_num = 4
+for cnt_i in range(user_page_num):
+    #instead of grabbing href link from the parsed XML, use a selenium click
+    #won't work otherwise (since it uses a JSON request to get the next page)
+    element = driver.find_element_by_class_name('next_page')
+    element.click()
+
+    curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
+    curr_page_reviews = list(curr_page_soup.select('.user'))
+    book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
+
+    time.sleep(0.95)  # to avoid the random-length HTML garbage anti-attack mechanism
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Threading time!
+## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+reviewer_info = []
+for i, curr_user in enumerate(book_info['reviewers']):
+    print('Reviewer {0} ~~~~~~~~~~~~~~~~~~'.format(i))
+    reviewer_info.append({})
+    reviewer_info[i]['name'] = curr_user.attrs['name']
+    reviewer_info[i]['link'] = curr_user.attrs['href']
+
+    #Step into the user's page
+    goodreads_root = 'https://www.goodreads.com'
+    t0 = time.time()
+    user_soup = get_page(goodreads_root + reviewer_info[i]['link'])
+    t1 = time.time()
+    dT = t1 - t0
+    print('user time = {0}'.format(dT))
+
+    #fish out the ratings link on the top left hand corner of the user's page
+    #add it to the dictionary once we have it
+    try:
+        reviewer_info[i]['ratings link'] = user_soup.select('.profilePageUserStatsInfo')[0].contents[1].attrs['href']
+    except:
+        try:
+            #Author's page has a different layout type...
+            reviewer_info[i]['ratings link'] = user_soup.select('.smallText')[0].contents[1].attrs['href']
+            print('On an authors page!')
+        except:
+            #Some people make their profiles private...
+            user_text = user_soup.select('#privateProfile')[0].text
+            usertextList = []
+            usertextList.append( user_text.split('This')[1][1:20] )
+            usertextList.append( user_text.split('Sign in to ')[1].split('\n')[0] )
+
+            print('On a private page, so no content available')
+            print('From users page: {0}, {1}'.format(usertextList[0], usertextList[1]))
+            print('skipping to next reviewer')
+            continue
+
+
+    #Step into the user's ratings page
+    #NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
+    t0 = time.time()
+    # ratings_soup = get_page(goodreads_root + reviewer_info[i]['ratings link'])
+    # ratings_soup = get_page_inf_scroll(goodreads_root + reviewer_info[i]['ratings link'])
+    ratingsList, ratingsScore_AVG, ratingsScore_OWN  = get_page_inf_scroll(goodreads_root + reviewer_info[i]['ratings link'])
+    t1 = time.time()
+    dT = t1 - t0
+    print('ratings time = {0}'.format(dT))
+
+    #iterate through all of the ratings, add it to the dictionary as a list of dictionaries (each one being the rating)
+    #TODO: Figure out basic proxy gathering/proxy list for multithreading scraping
+    #TODO: Once a basic 30x30 structure is saved, flesh out basics for net-creation algorithm
+    #TODO: Get a prototype going
+    #TODO: figure out how to make the javascript page scroll down to refesh to get all the ratings
+
+
+    reviewer_info[i]['ratings'] = []
+    for j in range(len(ratingsList)):
+        reviewer_info[i]['ratings'].append(ratingsList[j])
+        book_AVG_score = ratingsScore_AVG[j] #currently not used...include in the book node in the future
+        reviewer_info[i]['ratings'][j]['score'] = ratingsScore_OWN[j]
+
 
 
 
