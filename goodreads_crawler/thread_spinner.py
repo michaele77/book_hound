@@ -133,6 +133,8 @@ def get_page(fnc_url_link):
 def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
     ##Below is the new code for infinite scrolling
 
+    print('Infinite page, thread {0}'.format(curr_thread))
+
     continueFlag = True
     pageIter = 1
     ratingsListFnc = []
@@ -144,6 +146,7 @@ def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
     star_limit = 3 ##Automatically stops once 3 or less stars encountered TODO: what if NONE is encountered?
 
     while continueFlag:
+        print('Infinite page LOOPTIME, thread {0}'.format(curr_thread))
         append_string = '&page=' + str(pageIter)
         # driver.get(fnc_url_link+append_string)
         #
@@ -347,7 +350,7 @@ for cnt_i in range(user_page_num):
 ## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def hit_ratings_button(page_soup):
+def hit_ratings_button(page_soup, i):
     # fish out the ratings link on the top left hand corner of the user's page
     # add it to the dictionary once we have it
     try:
@@ -381,7 +384,7 @@ def add_to_reviewerInfo(curr_user, i, curr_thread):
     user_soup = get_payload(goodreads_root + reviewer_info[i]['link'])
 
     # Hit the ratings list button (NOTE: change this if we want to avoid an extra link to press)
-    error_return = hit_ratings_button(user_soup)
+    error_return = hit_ratings_button(user_soup, i)
 
     if error_return == 77:
         #This means the user's page is private! so skip them
@@ -394,15 +397,6 @@ def add_to_reviewerInfo(curr_user, i, curr_thread):
 
     print('Thread {0} on index {1}'.format(curr_thread, i))
 
-    if curr_thread == 1:
-        throwaway = 7
-        pass
-    if curr_thread == 2:
-        throwaway = 9
-        pass
-    if curr_thread == 3:
-        throwaway = 10
-        pass
 
     ratingsList, ratingsScore_AVG, ratingsScore_OWN = get_page_inf_scroll(
         goodreads_root + reviewer_info[i]['ratings link'], curr_thread)
@@ -425,6 +419,7 @@ def review_collection_thread_function(thread_num):
         with threading.Lock():
             link_indx = get_next_availability(threading_taken)
             threading_taken[link_indx] = True
+        print(threading_taken)
 
         print('Thread {0} has link {1}'.format(thread_num, link_indx))
         add_to_reviewerInfo(book_info['reviewers'][link_indx], link_indx, thread_num)
