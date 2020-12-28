@@ -62,7 +62,7 @@ import sys
 import copy
 import concurrent.futures
 import threading
-import config.py as my_config
+from config import get_scraper_API_KEY
 
 #-----------------------------------------------------------------------------#
 #                            MODULE FUNCTIONS                                 #
@@ -261,7 +261,7 @@ def timed_tester(which_test):
 #                               PRE-DEFINES                                   #
 #-----------------------------------------------------------------------------#
 
-API_KEY = my_config.scraperapi_API_KEY
+API_KEY = get_scraper_API_KEY()
 client = ScraperAPIClient(API_KEY)
 
 API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
@@ -445,10 +445,10 @@ threading_taken = [False]*len(example_list) #create a mapping list that tracks w
 
 #Run the actual tests!
 
-currtime = time.time()
-timed_tester('original')
-fintime = time.time()
-print('Original time: {0}'.format(fintime - currtime))
+# currtime = time.time()
+# timed_tester('original')
+# fintime = time.time()
+# print('Original time: {0}'.format(fintime - currtime))
 
 currtime = time.time()
 timed_tester('threading')
