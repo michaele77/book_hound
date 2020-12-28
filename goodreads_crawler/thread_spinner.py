@@ -77,6 +77,7 @@ API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
 
 url_location = 'https://www.goodreads.com/book/show/'
 book_reference_number = 186074 #Name of the Wind
+book_reference_number = 61535  #Selfish gene (sunbins fav)
 
 chrome_options = webdriver.chrome.options.Options()
 # chrome_options.add_argument("--headless")
@@ -102,6 +103,10 @@ star_assignment['really liked it']  = 4
 star_assignment['liked it']         = 3
 star_assignment['it was ok']        = 2
 star_assignment['did not like it']  = 1
+
+
+searchParam_max_rating_pages = 4
+searchParam_max_users = 4
 
 
 
@@ -142,7 +147,7 @@ def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
     ratingsScore_AVG = None
     ratingsScore_OWN_temp = None
 
-    page_limit = 6 ##Automatically stops if more than 5 pages
+    page_limit = searchParam_max_rating_pages ##Automatically stops if more than 5 pages
     star_limit = 3 ##Automatically stops once 3 or less stars encountered TODO: what if NONE is encountered?
 
     while continueFlag:
@@ -271,31 +276,57 @@ def get_next_availability(list_to_parse):
         if not trav_bool:
             return i
 
-#
-# def thread_function(thread_num):
-#     print('At thread number ' + str(thread_num))
-#     while not all(threading_taken): #continue while not all of threading_taken is true
-#         if get_concurrent_requests() < 5:
-#             with threading.Lock():
-#                 link_indx = get_next_availability(threading_taken)
-#                 threading_taken[link_indx] = True
-#
-#             print('Thread {0} has link {1}'.format(thread_num, link_indx))
-#             get_payload(example_list[link_indx])
-#
-#     print('Finished with thread {0}'.format(thread_num))
-#
-#
-# def timed_tester(which_test):
-#     if which_test == 'original':
-#         for i,link in enumerate(example_list):
-#             get_page(link)
-#             print('ORIGINAL: {0}'.format(i))
-#
-#
-#     elif which_test == 'threading':
-#         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-#             executor.map(thread_function, range(5))
+
+def extract_img(img_src_str):
+    response = requests.get(img_src_str)
+    out = response.content
+    return out
+
+def save_img_file(book_dict, inBits):
+    file = open('cover_photos/' + book_dict['title'] + '-' + str(book_dict['ID']) + '.jpg', 'wb')
+    file.write(inBits)
+    file.close()
+
+def get_genre_list(book_info):
+    # This function will unpack the "genre" list and will structure the data in a list
+    # Each item in the list will be a tuple: (plain string, href, user count)
+    # Note that plain string should be used as a reference
+    # Note that string and href could be lists in case of super genres
+
+    element_list = soup.select('.elementList')
+    element_list.pop(0) # Clear out the first garbage entree
+
+    output_list = []
+    for curr_element in element_list:
+        temp_content = curr_element.contents
+
+        # Do the user count first, it's easiest
+        user_count = temp_content[3].contents[1].contents[0] # outputs a string of form 'XXXX users'
+        temp_split = user_count.split(' ') # Split at the space between number and 'users'
+        user_count = int(temp_split[0].replace(',', '')) # Replace any commas with nothing to make it parseable
+
+        # Now do the plain string + href lists
+        plain_string_list = []
+        href_list = []
+
+        temp_combo_list = temp_content[1].contents
+        for curr_combo in temp_combo_list:
+            try:
+                plain_string_list.append( curr_combo.contents[0] )
+                href_list.append( curr_combo.attrs['href'] )
+            except:
+                # If we hit here, it's some sort of newline or something
+                continue
+
+        genre_tuple = (plain_string_list, href_list, user_count)
+
+        output_list.append( genre_tuple )
+
+    return output_list
+
+
+
+
 
 
 
@@ -313,10 +344,24 @@ soup = get_page(url_location+str(book_reference_number))
 #Get general book info
 book_info = {}
 
-book_info['title'] = soup.select('#bookTitle')[0].text.strip()  #book title
-book_info['author'] = soup.select('.authorName')[0].text.strip() #author
-book_info['meta'] = soup.select('#bookMeta')[0].text.strip()   #book meta
-book_info['details'] = soup.select('#details')[0].text.strip()    #book details (stats)
+book_info['ID'] = book_reference_number
+book_info['title'] = soup.select('#bookTitle')[0].text.strip()              # book title
+book_info['author'] = soup.select('.authorName')[0].text.strip()            # author
+book_info['meta'] = soup.select('#bookMeta')[0].text.strip()                # book meta
+book_info['details'] = soup.select('#details')[0].text.strip()              # book details (stats)
+
+#Extra info added:
+book_info['series'] = soup.select('#bookSeries')[0].text.strip()            # book series
+book_info['summary'] = soup.select('#descriptionContainer')[0].text.strip() # summary
+book_info['imageSource'] = soup.select('#coverImage')[0].attrs['src']       # jpg asset link of book cover
+
+image_bits = extract_img(book_info['imageSource'])
+save_img_file(book_info, image_bits)
+
+book_info['imageBinary'] = image_bits                                       # Actual image bitds
+book_info['genres'] = get_genre_list(book_info)                             # Genre list
+
+
 
 for i,v in enumerate(book_info):
     print('Book {0}: {1}'.format(i,v))
@@ -329,10 +374,10 @@ time.sleep(.5)
 close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
 element = driver.find_element_by_xpath(close_XPATH)
 element.click()
-time.sleep(0.95)
+time.sleep(1)
 
 #Append however many user pages we want to go through!
-user_page_num = 4
+user_page_num = searchParam_max_users
 for cnt_i in range(user_page_num):
     #instead of grabbing href link from the parsed XML, use a selenium click
     #won't work otherwise (since it uses a JSON request to get the next page)
@@ -343,7 +388,7 @@ for cnt_i in range(user_page_num):
     curr_page_reviews = list(curr_page_soup.select('.user'))
     book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
 
-    time.sleep(0.95)  # to avoid the random-length HTML garbage anti-attack mechanism
+    time.sleep(1)  # to avoid the random-length HTML garbage anti-attack mechanism
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Threading time!
@@ -433,60 +478,8 @@ def review_collection_thread_function(thread_num):
 reviewer_info = [0]*len(book_info['reviewers'])
 threading_taken = [False]*len(book_info['reviewers'])
 
+
+## Spin up the threads!
 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
     executor.map(review_collection_thread_function, range(5))
 
-
-
-
-
-
-# #Playing with threads...
-# #Just get a link with all the users
-#
-# example_list = ['https://www.goodreads.com/user/show/2465351-ian',
-#                 'https://www.goodreads.com/user/show/3030788-melanie']
-#
-# example_list = ['https://www.goodreads.com/user/show/2465351-ian',
-#                 'https://www.goodreads.com/user/show/59458347-petrik',
-#                 'https://www.goodreads.com/user/show/395599-shannon-giraffe-days',
-#                 'https://www.goodreads.com/user/show/666037-danica',
-#                 'https://www.goodreads.com/author/show/4721536.Mark_Lawrence',
-#                 'https://www.goodreads.com/user/show/3639270-rob',
-#                 'https://www.goodreads.com/user/show/58160628-emily-books-with-emily-fox',
-#                 'https://www.goodreads.com/author/show/108424.Patrick_Rothfuss',
-#                 'https://www.goodreads.com/user/show/17438949-melissa-dog-wolf-lover-martin',
-#                 'https://www.goodreads.com/user/show/10171516-jessica',
-#                 'https://www.goodreads.com/user/show/69106439-virginia-ronan-herondale',
-#                 'https://www.goodreads.com/user/show/58940-debbie',
-#                 'https://www.goodreads.com/user/show/3030788-melanie',
-#                 'https://www.goodreads.com/user/show/2465351-ian',
-#                 'https://www.goodreads.com/user/show/59458347-petrik',
-#                 'https://www.goodreads.com/user/show/395599-shannon-giraffe-days',
-#                 'https://www.goodreads.com/user/show/666037-danica',
-#                 'https://www.goodreads.com/author/show/4721536.Mark_Lawrence',
-#                 'https://www.goodreads.com/user/show/3639270-rob',
-#                 'https://www.goodreads.com/user/show/58160628-emily-books-with-emily-fox',
-#                 'https://www.goodreads.com/author/show/108424.Patrick_Rothfuss',
-#                 'https://www.goodreads.com/user/show/17438949-melissa-dog-wolf-lover-martin',
-#                 'https://www.goodreads.com/user/show/10171516-jessica',
-#                 'https://www.goodreads.com/user/show/69106439-virginia-ronan-herondale',
-#                 'https://www.goodreads.com/user/show/58940-debbie',
-#                 'https://www.goodreads.com/user/show/3030788-melanie']
-#
-# threading_taken = [False]*len(example_list) #create a mapping list that tracks which of the lists are taken
-#
-#
-#
-#
-# #Run the actual tests!
-#
-# # currtime = time.time()
-# # timed_tester('original')
-# # fintime = time.time()
-# # print('Original time: {0}'.format(fintime - currtime))
-#
-# currtime = time.time()
-# timed_tester('threading')
-# fintime = time.time()
-# print('Threading time: {0}'.format(fintime - currtime))
