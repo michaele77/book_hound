@@ -64,6 +64,48 @@ import concurrent.futures
 import threading
 from config import get_scraper_API_KEY
 
+
+
+#-----------------------------------------------------------------------------#
+#                               PRE-DEFINES                                   #
+#-----------------------------------------------------------------------------#
+
+API_KEY = get_scraper_API_KEY()
+client = ScraperAPIClient(API_KEY)
+
+API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
+
+url_location = 'https://www.goodreads.com/book/show/'
+book_reference_number = 186074 #Name of the Wind
+
+chrome_options = webdriver.chrome.options.Options()
+# chrome_options.add_argument("--headless")
+driver = webdriver.Chrome(options=chrome_options)
+
+#--------------------------------#
+#  Goodreads Star Assignment     #
+#--------------------------------#
+#  Stars   |  field rating value #
+#--------------------------------#
+#   5      |  'it was amazing'   #
+#   4      |  'really liked it'  #
+#   3      |      'liked it'     #
+#   2      |     'it was ok'     #
+#   1      |  'did not like it'  #
+#   N/A    |       No key        #
+#--------------------------------#
+
+star_assignment = {}
+
+star_assignment['it was amazing']   = 5
+star_assignment['really liked it']  = 4
+star_assignment['liked it']         = 3
+star_assignment['it was ok']        = 2
+star_assignment['did not like it']  = 1
+
+
+
+
 #-----------------------------------------------------------------------------#
 #                            MODULE FUNCTIONS                                 #
 #-----------------------------------------------------------------------------#
@@ -88,7 +130,7 @@ def get_page(fnc_url_link):
 
 
 
-def get_page_inf_scroll(fnc_url_link, scroll_num=20):
+def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
     ##Below is the new code for infinite scrolling
 
     continueFlag = True
@@ -103,9 +145,10 @@ def get_page_inf_scroll(fnc_url_link, scroll_num=20):
 
     while continueFlag:
         append_string = '&page=' + str(pageIter)
-        driver.get(fnc_url_link+append_string)
-
-        temp_soup = BeautifulSoup(driver.page_source, 'lxml')
+        # driver.get(fnc_url_link+append_string)
+        #
+        # temp_soup = BeautifulSoup(driver.page_source, 'lxml')
+        temp_soup = get_payload(fnc_url_link+append_string)
 
         small_ratingsList = temp_soup.select('.field.title')
         small_ratingsList.pop(0)
@@ -196,9 +239,6 @@ def get_page_inf_scroll(fnc_url_link, scroll_num=20):
             pageIter += 1
 
 
-    # soup_toreturn = BeautifulSoup(driver.page_source, 'lxml')
-
-    print('soup + scroll time = {0}'.format(dT))
 
     return ratingsList, ratingsScore_AVG, ratingsScore_OWN
 
@@ -228,71 +268,35 @@ def get_next_availability(list_to_parse):
         if not trav_bool:
             return i
 
-
-def thread_function(thread_num):
-    print('At thread number ' + str(thread_num))
-    while not all(threading_taken): #continue while not all of threading_taken is true
-        if get_concurrent_requests() < 5:
-            with threading.Lock():
-                link_indx = get_next_availability(threading_taken)
-                threading_taken[link_indx] = True
-
-            print('Thread {0} has link {1}'.format(thread_num, link_indx))
-            get_payload(example_list[link_indx])
-
-    print('Finished with thread {0}'.format(thread_num))
-
-
-def timed_tester(which_test):
-    if which_test == 'original':
-        for i,link in enumerate(example_list):
-            get_page(link)
-            print('ORIGINAL: {0}'.format(i))
-
-
-    elif which_test == 'threading':
-        with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-            executor.map(thread_function, range(5))
-
-
+#
+# def thread_function(thread_num):
+#     print('At thread number ' + str(thread_num))
+#     while not all(threading_taken): #continue while not all of threading_taken is true
+#         if get_concurrent_requests() < 5:
+#             with threading.Lock():
+#                 link_indx = get_next_availability(threading_taken)
+#                 threading_taken[link_indx] = True
+#
+#             print('Thread {0} has link {1}'.format(thread_num, link_indx))
+#             get_payload(example_list[link_indx])
+#
+#     print('Finished with thread {0}'.format(thread_num))
+#
+#
+# def timed_tester(which_test):
+#     if which_test == 'original':
+#         for i,link in enumerate(example_list):
+#             get_page(link)
+#             print('ORIGINAL: {0}'.format(i))
+#
+#
+#     elif which_test == 'threading':
+#         with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+#             executor.map(thread_function, range(5))
 
 
-#-----------------------------------------------------------------------------#
-#                               PRE-DEFINES                                   #
-#-----------------------------------------------------------------------------#
 
-API_KEY = get_scraper_API_KEY()
-client = ScraperAPIClient(API_KEY)
 
-API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
-
-url_location = 'https://www.goodreads.com/book/show/'
-book_reference_number = 186074 #Name of the Wind
-
-chrome_options = webdriver.chrome.options.Options()
-# chrome_options.add_argument("--headless")
-driver = webdriver.Chrome(options=chrome_options)
-
-#--------------------------------#
-#  Goodreads Star Assignment     #
-#--------------------------------#
-#  Stars   |  field rating value #
-#--------------------------------#
-#   5      |  'it was amazing'   #
-#   4      |  'really liked it'  #
-#   3      |      'liked it'     #
-#   2      |     'it was ok'     #
-#   1      |  'did not like it'  #
-#   N/A    |       No key        #
-#--------------------------------#
-
-star_assignment = {}
-
-star_assignment['it was amazing']   = 5
-star_assignment['really liked it']  = 4
-star_assignment['liked it']         = 3
-star_assignment['it was ok']        = 2
-star_assignment['did not like it']  = 1
 
 
 
@@ -343,118 +347,151 @@ for cnt_i in range(user_page_num):
 ## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-
-reviewer_info = []
-for i, curr_user in enumerate(book_info['reviewers']):
-    print('Reviewer {0} ~~~~~~~~~~~~~~~~~~'.format(i))
-    reviewer_info.append({})
-    reviewer_info[i]['name'] = curr_user.attrs['name']
-    reviewer_info[i]['link'] = curr_user.attrs['href']
-
-    #Step into the user's page
-    goodreads_root = 'https://www.goodreads.com'
-    t0 = time.time()
-    user_soup = get_page(goodreads_root + reviewer_info[i]['link'])
-    t1 = time.time()
-    dT = t1 - t0
-    print('user time = {0}'.format(dT))
-
-    #fish out the ratings link on the top left hand corner of the user's page
-    #add it to the dictionary once we have it
+def hit_ratings_button(page_soup):
+    # fish out the ratings link on the top left hand corner of the user's page
+    # add it to the dictionary once we have it
     try:
-        reviewer_info[i]['ratings link'] = user_soup.select('.profilePageUserStatsInfo')[0].contents[1].attrs['href']
+        reviewer_info[i]['ratings link'] = page_soup.select('.profilePageUserStatsInfo')[0].contents[1].attrs['href']
     except:
         try:
-            #Author's page has a different layout type...
-            reviewer_info[i]['ratings link'] = user_soup.select('.smallText')[0].contents[1].attrs['href']
+            # Author's page has a different layout type...
+            reviewer_info[i]['ratings link'] = page_soup.select('.smallText')[0].contents[1].attrs['href']
             print('On an authors page!')
         except:
-            #Some people make their profiles private...
-            user_text = user_soup.select('#privateProfile')[0].text
+            # Some people make their profiles private...
+            user_text = page_soup.select('#privateProfile')[0].text
             usertextList = []
-            usertextList.append( user_text.split('This')[1][1:20] )
-            usertextList.append( user_text.split('Sign in to ')[1].split('\n')[0] )
+            usertextList.append(user_text.split('This')[1][1:20])
+            usertextList.append(user_text.split('Sign in to ')[1].split('\n')[0])
 
             print('On a private page, so no content available')
             print('From users page: {0}, {1}'.format(usertextList[0], usertextList[1]))
             print('skipping to next reviewer')
-            continue
+
+            return 77 #error code, i guess
 
 
-    #Step into the user's ratings page
-    #NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
-    t0 = time.time()
-    # ratings_soup = get_page(goodreads_root + reviewer_info[i]['ratings link'])
-    # ratings_soup = get_page_inf_scroll(goodreads_root + reviewer_info[i]['ratings link'])
-    ratingsList, ratingsScore_AVG, ratingsScore_OWN  = get_page_inf_scroll(goodreads_root + reviewer_info[i]['ratings link'])
-    t1 = time.time()
-    dT = t1 - t0
-    print('ratings time = {0}'.format(dT))
+def add_to_reviewerInfo(curr_user, i, curr_thread):
+    reviewer_info[i] = {}
+    reviewer_info[i]['name'] = curr_user.attrs['name']
+    reviewer_info[i]['link'] = curr_user.attrs['href']
 
-    #iterate through all of the ratings, add it to the dictionary as a list of dictionaries (each one being the rating)
-    #TODO: Figure out basic proxy gathering/proxy list for multithreading scraping
-    #TODO: Once a basic 30x30 structure is saved, flesh out basics for net-creation algorithm
-    #TODO: Get a prototype going
-    #TODO: figure out how to make the javascript page scroll down to refesh to get all the ratings
+    # Step into the user's page
+    goodreads_root = 'https://www.goodreads.com'
+    user_soup = get_payload(goodreads_root + reviewer_info[i]['link'])
 
+    # Hit the ratings list button (NOTE: change this if we want to avoid an extra link to press)
+    error_return = hit_ratings_button(user_soup)
+
+    if error_return == 77:
+        #This means the user's page is private! so skip them
+        print('ENCOUNTERED DEAD USER, PASSING <<<')
+        return
+
+
+    # Step into the user's ratings page
+    # NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
+
+    print('Thread {0} on index {1}'.format(curr_thread, i))
+
+    if curr_thread == 1:
+        throwaway = 7
+        pass
+    if curr_thread == 2:
+        throwaway = 9
+        pass
+    if curr_thread == 3:
+        throwaway = 10
+        pass
+
+    ratingsList, ratingsScore_AVG, ratingsScore_OWN = get_page_inf_scroll(
+        goodreads_root + reviewer_info[i]['ratings link'], curr_thread)
+
+    print('Thread {0} after infinite scroll!'.format(curr_thread))
 
     reviewer_info[i]['ratings'] = []
     for j in range(len(ratingsList)):
         reviewer_info[i]['ratings'].append(ratingsList[j])
-        book_AVG_score = ratingsScore_AVG[j] #currently not used...include in the book node in the future
+        book_AVG_score = ratingsScore_AVG[j]  # currently not used...include in the book node in the future
         reviewer_info[i]['ratings'][j]['score'] = ratingsScore_OWN[j]
 
 
 
 
+def review_collection_thread_function(thread_num):
+    print('At thread number ' + str(thread_num))
+    while not all(threading_taken): #continue while not all of threading_taken is true
+        # if get_concurrent_requests() < 5:
+        with threading.Lock():
+            link_indx = get_next_availability(threading_taken)
+            threading_taken[link_indx] = True
+
+        print('Thread {0} has link {1}'.format(thread_num, link_indx))
+        add_to_reviewerInfo(book_info['reviewers'][link_indx], link_indx, thread_num)
+        # get_payload(example_list[link_indx])
 
 
-#Playing with threads...
-#Just get a link with all the users
+    print('Finished with thread {0}'.format(thread_num))
 
-example_list = ['https://www.goodreads.com/user/show/2465351-ian',
-                'https://www.goodreads.com/user/show/3030788-melanie']
 
-example_list = ['https://www.goodreads.com/user/show/2465351-ian',
-                'https://www.goodreads.com/user/show/59458347-petrik',
-                'https://www.goodreads.com/user/show/395599-shannon-giraffe-days',
-                'https://www.goodreads.com/user/show/666037-danica',
-                'https://www.goodreads.com/author/show/4721536.Mark_Lawrence',
-                'https://www.goodreads.com/user/show/3639270-rob',
-                'https://www.goodreads.com/user/show/58160628-emily-books-with-emily-fox',
-                'https://www.goodreads.com/author/show/108424.Patrick_Rothfuss',
-                'https://www.goodreads.com/user/show/17438949-melissa-dog-wolf-lover-martin',
-                'https://www.goodreads.com/user/show/10171516-jessica',
-                'https://www.goodreads.com/user/show/69106439-virginia-ronan-herondale',
-                'https://www.goodreads.com/user/show/58940-debbie',
-                'https://www.goodreads.com/user/show/3030788-melanie',
-                'https://www.goodreads.com/user/show/2465351-ian',
-                'https://www.goodreads.com/user/show/59458347-petrik',
-                'https://www.goodreads.com/user/show/395599-shannon-giraffe-days',
-                'https://www.goodreads.com/user/show/666037-danica',
-                'https://www.goodreads.com/author/show/4721536.Mark_Lawrence',
-                'https://www.goodreads.com/user/show/3639270-rob',
-                'https://www.goodreads.com/user/show/58160628-emily-books-with-emily-fox',
-                'https://www.goodreads.com/author/show/108424.Patrick_Rothfuss',
-                'https://www.goodreads.com/user/show/17438949-melissa-dog-wolf-lover-martin',
-                'https://www.goodreads.com/user/show/10171516-jessica',
-                'https://www.goodreads.com/user/show/69106439-virginia-ronan-herondale',
-                'https://www.goodreads.com/user/show/58940-debbie',
-                'https://www.goodreads.com/user/show/3030788-melanie']
 
-threading_taken = [False]*len(example_list) #create a mapping list that tracks which of the lists are taken
+reviewer_info = [0]*len(book_info['reviewers'])
+threading_taken = [False]*len(book_info['reviewers'])
+
+with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+    executor.map(review_collection_thread_function, range(5))
 
 
 
 
-#Run the actual tests!
 
+
+# #Playing with threads...
+# #Just get a link with all the users
+#
+# example_list = ['https://www.goodreads.com/user/show/2465351-ian',
+#                 'https://www.goodreads.com/user/show/3030788-melanie']
+#
+# example_list = ['https://www.goodreads.com/user/show/2465351-ian',
+#                 'https://www.goodreads.com/user/show/59458347-petrik',
+#                 'https://www.goodreads.com/user/show/395599-shannon-giraffe-days',
+#                 'https://www.goodreads.com/user/show/666037-danica',
+#                 'https://www.goodreads.com/author/show/4721536.Mark_Lawrence',
+#                 'https://www.goodreads.com/user/show/3639270-rob',
+#                 'https://www.goodreads.com/user/show/58160628-emily-books-with-emily-fox',
+#                 'https://www.goodreads.com/author/show/108424.Patrick_Rothfuss',
+#                 'https://www.goodreads.com/user/show/17438949-melissa-dog-wolf-lover-martin',
+#                 'https://www.goodreads.com/user/show/10171516-jessica',
+#                 'https://www.goodreads.com/user/show/69106439-virginia-ronan-herondale',
+#                 'https://www.goodreads.com/user/show/58940-debbie',
+#                 'https://www.goodreads.com/user/show/3030788-melanie',
+#                 'https://www.goodreads.com/user/show/2465351-ian',
+#                 'https://www.goodreads.com/user/show/59458347-petrik',
+#                 'https://www.goodreads.com/user/show/395599-shannon-giraffe-days',
+#                 'https://www.goodreads.com/user/show/666037-danica',
+#                 'https://www.goodreads.com/author/show/4721536.Mark_Lawrence',
+#                 'https://www.goodreads.com/user/show/3639270-rob',
+#                 'https://www.goodreads.com/user/show/58160628-emily-books-with-emily-fox',
+#                 'https://www.goodreads.com/author/show/108424.Patrick_Rothfuss',
+#                 'https://www.goodreads.com/user/show/17438949-melissa-dog-wolf-lover-martin',
+#                 'https://www.goodreads.com/user/show/10171516-jessica',
+#                 'https://www.goodreads.com/user/show/69106439-virginia-ronan-herondale',
+#                 'https://www.goodreads.com/user/show/58940-debbie',
+#                 'https://www.goodreads.com/user/show/3030788-melanie']
+#
+# threading_taken = [False]*len(example_list) #create a mapping list that tracks which of the lists are taken
+#
+#
+#
+#
+# #Run the actual tests!
+#
+# # currtime = time.time()
+# # timed_tester('original')
+# # fintime = time.time()
+# # print('Original time: {0}'.format(fintime - currtime))
+#
 # currtime = time.time()
-# timed_tester('original')
+# timed_tester('threading')
 # fintime = time.time()
-# print('Original time: {0}'.format(fintime - currtime))
-
-currtime = time.time()
-timed_tester('threading')
-fintime = time.time()
-print('Threading time: {0}'.format(fintime - currtime))
+# print('Threading time: {0}'.format(fintime - currtime))
