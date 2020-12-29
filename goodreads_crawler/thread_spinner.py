@@ -78,6 +78,7 @@ API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
 url_location = 'https://www.goodreads.com/book/show/'
 book_reference_number = 186074 #Name of the Wind
 book_reference_number = 61535  #Selfish gene (sunbins fav)
+book_reference_number = 14891  #A Tree Grows in Brooklyn (Belindas fav)
 
 chrome_options = webdriver.chrome.options.Options()
 # chrome_options.add_argument("--headless")
@@ -159,7 +160,12 @@ def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
         temp_soup = get_payload(fnc_url_link+append_string)
 
         small_ratingsList = temp_soup.select('.field.title')
-        small_ratingsList.pop(0)
+        try:
+            small_ratingsList.pop(0)
+        except:
+            print('Encountered private user')
+            return -1, -1, -1 # error code
+
         small_ratingsScore_AVG = temp_soup.select('.field.avg_rating')  # This simply gets AVERAGE RATING OF THE BOOK
         small_ratingsScore_AVG.pop(0)
         small_ratingsScore_OWN = temp_soup.select('.staticStars.notranslate')
@@ -326,6 +332,104 @@ def get_genre_list(book_info):
 
 
 
+def hit_ratings_button(page_soup, i):
+    # fish out the ratings link on the top left hand corner of the user's page
+    # add it to the dictionary once we have it
+    try:
+        reviewer_info[i]['ratings link'] = page_soup.select('.profilePageUserStatsInfo')[0].contents[1].attrs['href']
+    except:
+        try:
+            # Author's page has a different layout type...
+            reviewer_info[i]['ratings link'] = page_soup.select('.smallText')[0].contents[1].attrs['href']
+            print('On an authors page!')
+        except:
+            # Some people make their profiles private...
+            user_text = page_soup.select('#privateProfile')[0].text
+            usertextList = []
+            usertextList.append(user_text.split('This')[1][1:20])
+            usertextList.append(user_text.split('Sign in to ')[1].split('\n')[0])
+
+            print('On a private page, so no content available')
+            print('From users page: {0}, {1}'.format(usertextList[0], usertextList[1]))
+            print('skipping to next reviewer')
+
+            return 77 #error code, i guess
+
+def add_userRating_link(i):
+    pre_string = 'https://www.goodreads.com/review/list/'
+    post_string = '?sort=rating&view=reviews'
+    mid_string_list = reviewer_info[i]['link'].split('/')
+    mid_string = mid_string_list[-1]
+
+    ratinglist_link = pre_string + mid_string + post_string
+    reviewer_info[i]['ratings link'] = ratinglist_link
+
+
+def add_to_reviewerInfo(curr_user, i, curr_thread):
+    reviewer_info[i] = {}
+    reviewer_info[i]['name'] = curr_user.attrs['name']
+    reviewer_info[i]['link'] = curr_user.attrs['href']
+
+    # # Step into the user's page
+    # goodreads_root = 'https://www.goodreads.com'
+    # user_soup = get_payload(goodreads_root + reviewer_info[i]['link'])
+    #
+    # # Hit the ratings list button (NOTE: change this if we want to avoid an extra link to press)
+    # error_return = hit_ratings_button(user_soup, i)
+    #
+    # if error_return == 77:
+    #     #This means the user's page is private! so skip them
+    #     print('ENCOUNTERED DEAD USER, PASSING <<<')
+    #     return
+
+    # Add the link to the reviewer_info structure
+    add_userRating_link(i)
+
+
+
+    # Step into the user's ratings page
+    # NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
+
+    print('Thread {0} on index {1}'.format(curr_thread, i))
+
+
+    ratingsList, ratingsScore_AVG, ratingsScore_OWN = get_page_inf_scroll(reviewer_info[i]['ratings link'], curr_thread)
+
+    # Check if we hit a dead user
+    if ratingsList == -1:
+        print('Thread {0} hit a private user, aborting this user'.format(curr_thread))
+        return
+
+    print('Thread {0} after infinite scroll!'.format(curr_thread))
+
+    reviewer_info[i]['ratings'] = []
+    for j in range(len(ratingsList)):
+        reviewer_info[i]['ratings'].append(ratingsList[j])
+        book_AVG_score = ratingsScore_AVG[j]  # currently not used...include in the book node in the future
+        reviewer_info[i]['ratings'][j]['score'] = ratingsScore_OWN[j]
+
+
+
+
+def review_collection_thread_function(thread_num):
+    print('At thread number ' + str(thread_num))
+    while not all(threading_taken): #continue while not all of threading_taken is true
+        # if get_concurrent_requests() < 5:
+        with threading.Lock():
+            link_indx = get_next_availability(threading_taken)
+            threading_taken[link_indx] = True
+        print(threading_taken)
+
+        print('Thread {0} has link {1}'.format(thread_num, link_indx))
+        add_to_reviewerInfo(book_info['reviewers'][link_indx], link_indx, thread_num)
+        # get_payload(example_list[link_indx])
+
+
+    print('Finished with thread {0}'.format(thread_num))
+
+
+
+
 
 
 
@@ -367,20 +471,24 @@ for i,v in enumerate(book_info):
     print('Book {0}: {1}'.format(i,v))
 
 #Now, step into the 30 reviewers on the first page
-book_info['reviewers'] = list(soup.select('.user')) #Raw format (not text) of all reviewers, CONVERT TO LIST FOR EASY CONCATENATION
+# book_info['reviewers'] = list(soup.select('.user')) #Raw format (not text) of all reviewers, CONVERT TO LIST FOR EASY CONCATENATION
+book_info['reviewers'] = []
 
 #Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
 time.sleep(.5)
 close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
 element = driver.find_element_by_xpath(close_XPATH)
 element.click()
-time.sleep(1)
+time.sleep(2)
 
 #Append however many user pages we want to go through!
 user_page_num = searchParam_max_users
 for cnt_i in range(user_page_num):
     #instead of grabbing href link from the parsed XML, use a selenium click
     #won't work otherwise (since it uses a JSON request to get the next page)
+    time.sleep(2)  # to avoid the random-length HTML garbage anti-attack mechanism
+
+    # The first click when cnt_i == 0 just brings us down to the bottom page, and doesn't bring new info...
     element = driver.find_element_by_class_name('next_page')
     element.click()
 
@@ -388,90 +496,13 @@ for cnt_i in range(user_page_num):
     curr_page_reviews = list(curr_page_soup.select('.user'))
     book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
 
-    time.sleep(1)  # to avoid the random-length HTML garbage anti-attack mechanism
+
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ## Threading time!
 ## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-def hit_ratings_button(page_soup, i):
-    # fish out the ratings link on the top left hand corner of the user's page
-    # add it to the dictionary once we have it
-    try:
-        reviewer_info[i]['ratings link'] = page_soup.select('.profilePageUserStatsInfo')[0].contents[1].attrs['href']
-    except:
-        try:
-            # Author's page has a different layout type...
-            reviewer_info[i]['ratings link'] = page_soup.select('.smallText')[0].contents[1].attrs['href']
-            print('On an authors page!')
-        except:
-            # Some people make their profiles private...
-            user_text = page_soup.select('#privateProfile')[0].text
-            usertextList = []
-            usertextList.append(user_text.split('This')[1][1:20])
-            usertextList.append(user_text.split('Sign in to ')[1].split('\n')[0])
-
-            print('On a private page, so no content available')
-            print('From users page: {0}, {1}'.format(usertextList[0], usertextList[1]))
-            print('skipping to next reviewer')
-
-            return 77 #error code, i guess
-
-
-def add_to_reviewerInfo(curr_user, i, curr_thread):
-    reviewer_info[i] = {}
-    reviewer_info[i]['name'] = curr_user.attrs['name']
-    reviewer_info[i]['link'] = curr_user.attrs['href']
-
-    # Step into the user's page
-    goodreads_root = 'https://www.goodreads.com'
-    user_soup = get_payload(goodreads_root + reviewer_info[i]['link'])
-
-    # Hit the ratings list button (NOTE: change this if we want to avoid an extra link to press)
-    error_return = hit_ratings_button(user_soup, i)
-
-    if error_return == 77:
-        #This means the user's page is private! so skip them
-        print('ENCOUNTERED DEAD USER, PASSING <<<')
-        return
-
-
-    # Step into the user's ratings page
-    # NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
-
-    print('Thread {0} on index {1}'.format(curr_thread, i))
-
-
-    ratingsList, ratingsScore_AVG, ratingsScore_OWN = get_page_inf_scroll(
-        goodreads_root + reviewer_info[i]['ratings link'], curr_thread)
-
-    print('Thread {0} after infinite scroll!'.format(curr_thread))
-
-    reviewer_info[i]['ratings'] = []
-    for j in range(len(ratingsList)):
-        reviewer_info[i]['ratings'].append(ratingsList[j])
-        book_AVG_score = ratingsScore_AVG[j]  # currently not used...include in the book node in the future
-        reviewer_info[i]['ratings'][j]['score'] = ratingsScore_OWN[j]
-
-
-
-
-def review_collection_thread_function(thread_num):
-    print('At thread number ' + str(thread_num))
-    while not all(threading_taken): #continue while not all of threading_taken is true
-        # if get_concurrent_requests() < 5:
-        with threading.Lock():
-            link_indx = get_next_availability(threading_taken)
-            threading_taken[link_indx] = True
-        print(threading_taken)
-
-        print('Thread {0} has link {1}'.format(thread_num, link_indx))
-        add_to_reviewerInfo(book_info['reviewers'][link_indx], link_indx, thread_num)
-        # get_payload(example_list[link_indx])
-
-
-    print('Finished with thread {0}'.format(thread_num))
 
 
 
@@ -482,4 +513,11 @@ threading_taken = [False]*len(book_info['reviewers'])
 ## Spin up the threads!
 with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
     executor.map(review_collection_thread_function, range(5))
+
+
+## STATS:
+## Took 13 minutes with 4 threads (didn't seem like thread 0 was up...) for 150 users...
+## Took 810-395 = 415 requests
+
+x = 7 # BREAKLOOP...stop here
 
