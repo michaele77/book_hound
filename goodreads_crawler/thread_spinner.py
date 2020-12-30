@@ -62,7 +62,11 @@ import sys
 import copy
 import concurrent.futures
 import threading
+
+# Do custom function imports
 from config import get_scraper_API_KEY
+from node_structure import BookNode
+from node_structure import UserNode
 
 
 
@@ -370,6 +374,9 @@ def add_to_reviewerInfo(curr_user, i, curr_thread):
     reviewer_info[i]['name'] = curr_user.attrs['name']
     reviewer_info[i]['link'] = curr_user.attrs['href']
 
+    # extract the user ID from the first part of the href
+    reviewer_info[i]['ID'] = int(reviewer_info[i]['link'].split('/')[-1].split('-')[0])
+
     # Add the link to the reviewer_info structure
     add_userRating_link(i)
 
@@ -390,6 +397,12 @@ def add_to_reviewerInfo(curr_user, i, curr_thread):
         reviewer_info[i]['ratings'].append(ratingsList[j])
         book_AVG_score = ratingsScore_AVG[j]  # currently not used...include in the book node in the future
         reviewer_info[i]['ratings'][j]['score'] = ratingsScore_OWN[j]
+
+        # Also include the unique ID for each book for easy identification later on
+        try:
+            reviewer_info[i]['ratings'][j]['ID'] = int(reviewer_info[i]['ratings'][j]['href'].split('/')[-1].split('-')[0])
+        except:
+            reviewer_info[i]['ratings'][j]['ID'] = int(reviewer_info[i]['ratings'][j]['href'].split('/')[-1].split('.')[0])
 
 
 
@@ -425,95 +438,217 @@ def review_collection_thread_function(thread_num):
 #                                   MAIN                                      #
 #-----------------------------------------------------------------------------#
 
+if False:
+    soup = get_page(url_location+str(book_reference_number))
 
-soup = get_page(url_location+str(book_reference_number))
+    #Get general book info
+    book_info = {}
 
-#Get general book info
-book_info = {}
+    book_info['ID'] = book_reference_number
+    book_info['title'] = soup.select('#bookTitle')[0].text.strip()              # book title
+    book_info['author'] = soup.select('.authorName')[0].text.strip()            # author
+    book_info['meta'] = soup.select('#bookMeta')[0].text.strip()                # book meta
+    book_info['details'] = soup.select('#details')[0].text.strip()              # book details (stats)
 
-book_info['ID'] = book_reference_number
-book_info['title'] = soup.select('#bookTitle')[0].text.strip()              # book title
-book_info['author'] = soup.select('.authorName')[0].text.strip()            # author
-book_info['meta'] = soup.select('#bookMeta')[0].text.strip()                # book meta
-book_info['details'] = soup.select('#details')[0].text.strip()              # book details (stats)
+    #Extra info added:
+    book_info['series'] = soup.select('#bookSeries')[0].text.strip()            # book series
+    book_info['summary'] = soup.select('#descriptionContainer')[0].text.strip() # summary
+    book_info['imageSource'] = soup.select('#coverImage')[0].attrs['src']       # jpg asset link of book cover
 
-#Extra info added:
-book_info['series'] = soup.select('#bookSeries')[0].text.strip()            # book series
-book_info['summary'] = soup.select('#descriptionContainer')[0].text.strip() # summary
-book_info['imageSource'] = soup.select('#coverImage')[0].attrs['src']       # jpg asset link of book cover
+    image_bits = extract_img(book_info['imageSource'])
+    save_img_file(book_info, image_bits)
 
-image_bits = extract_img(book_info['imageSource'])
-save_img_file(book_info, image_bits)
-
-book_info['imageBinary'] = image_bits                                       # Actual image bitds
-book_info['genres'] = get_genre_list(book_info)                             # Genre list
-
+    book_info['imageBinary'] = image_bits                                       # Actual image bitds
+    book_info['genres'] = get_genre_list(book_info)                             # Genre list
+    book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
 
 
-for i,v in enumerate(book_info):
-    print('Book {0}: {1}'.format(i,v))
 
-#Now, step into the 30 reviewers on the first page
-# book_info['reviewers'] = list(soup.select('.user')) #Raw format (not text) of all reviewers, CONVERT TO LIST FOR EASY CONCATENATION
-book_info['reviewers'] = []
+    for i,v in enumerate(book_info):
+        print('Book {0}: {1}'.format(i,v))
 
-#Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
-time.sleep(.5)
-close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
-element = driver.find_element_by_xpath(close_XPATH)
-element.click()
-time.sleep(2)
+    #Now, step into the 30 reviewers on the first page
+    # book_info['reviewers'] = list(soup.select('.user')) #Raw format (not text) of all reviewers, CONVERT TO LIST FOR EASY CONCATENATION
+    book_info['reviewers'] = []
 
-#Append however many user pages we want to go through!
-user_page_num = searchParam_max_users
-for cnt_i in range(user_page_num):
-    #instead of grabbing href link from the parsed XML, use a selenium click
-    #won't work otherwise (since it uses a JSON request to get the next page)
-    time.sleep(2)  # to avoid the random-length HTML garbage anti-attack mechanism
-
-    # The first click when cnt_i == 0 just brings us down to the bottom page, and doesn't bring new info...
-    element = driver.find_element_by_class_name('next_page')
+    #Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
+    time.sleep(.5)
+    close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
+    element = driver.find_element_by_xpath(close_XPATH)
     element.click()
+    time.sleep(2)
 
-    curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
-    curr_page_reviews = list(curr_page_soup.select('.user'))
+    #Append however many user pages we want to go through!
+    user_page_num = searchParam_max_users
+    for cnt_i in range(user_page_num):
+        #instead of grabbing href link from the parsed XML, use a selenium click
+        #won't work otherwise (since it uses a JSON request to get the next page)
+        time.sleep(2)  # to avoid the random-length HTML garbage anti-attack mechanism
 
-    # Now, if the user's review is 3 or less stars, kick them off the list
-    reviewer_stars = list(curr_page_soup.select('.staticStars.notranslate'))
-    reviewer_stars = reviewer_stars[2:]  # Now this list corresponds to the reviewer list
-    reviewer_stars = [curri.attrs['title'] for curri in reviewer_stars]  # Now should be the pure string
+        # The first click when cnt_i == 0 just brings us down to the bottom page, and doesn't bring new info...
+        element = driver.find_element_by_class_name('next_page')
+        element.click()
 
-    kickoff_list = []
-    for iterI, curr_stars in enumerate(reviewer_stars):
-        star_num = star_assignment[curr_stars]
-        if star_num <= 3:
-            # If the review was not good, skip this person
-            # Add to a "kick off" list first so that a pop error doesnt occur
-            print('POP off person {0}'.format(iterI))
-            kickoff_list.append(iterI)
+        curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
+        curr_page_reviews = list(curr_page_soup.select('.user'))
 
-    # Now proceed to actually pop these people
-    for index in sorted(kickoff_list, reverse=True):
-        del curr_page_reviews[index] # del is same as pop, but doesnt return a value (so its probably faster...)
+        # Now, if the user's review is 3 or less stars, kick them off the list
+        reviewer_stars = list(curr_page_soup.select('.staticStars.notranslate'))
+        reviewer_stars = reviewer_stars[2:]  # Now this list corresponds to the reviewer list
+        reviewer_stars = [curri.attrs['title'] for curri in reviewer_stars]  # Now should be the pure string
+
+        kickoff_list = []
+        for iterI, curr_stars in enumerate(reviewer_stars):
+            star_num = star_assignment[curr_stars]
+            if star_num <= 3:
+                # If the review was not good, skip this person
+                # Add to a "kick off" list first so that a pop error doesnt occur
+                print('POP off person {0}'.format(iterI))
+                kickoff_list.append(iterI)
+
+        # Now proceed to actually pop these people
+        for index in sorted(kickoff_list, reverse=True):
+            del curr_page_reviews[index] # del is same as pop, but doesnt return a value (so its probably faster...)
 
 
-    book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
+        book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
+
+
+
+    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## Threading time!
+    ## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
+    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+
+    reviewer_info = [0]*len(book_info['reviewers'])
+    threading_taken = [False]*len(book_info['reviewers'])
+
+
+    ## Spin up the threads!
+    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
+        executor.map(review_collection_thread_function, range(5))
+
+
 
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## Threading time!
-## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
+## Done with scraping!
+## Save to file
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+    ogRecLimit = sys.getrecursionlimit()
+    sys.setrecursionlimit(100000)
+    with open('temp_data_0.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump([book_info, reviewer_info], f)
 
-reviewer_info = [0]*len(book_info['reviewers'])
-threading_taken = [False]*len(book_info['reviewers'])
+
+# Getting back the objects:
+with open('temp_data_0.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+    book_info, reviewer_info = pickle.load(f)
+
+sys.setrecursionlimit(100)
 
 
-## Spin up the threads!
-with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-    executor.map(review_collection_thread_function, range(5))
+
+
+
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+## Add info to nodes
+## leverage the node_structure.py file imported
+## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+#Create the network with the correct class assignments
+#For each book (in this case, 1) iterate through all of the users
+#Create a user node for each user, and a book node for each of their corresponding rated books
+#For each user's books, search that this book is not in the network before adding it
+
+covered_books = [] #list to keep track of books that have been added to the net
+covered_users = [] #list to keep track of users that have been added to the net
+book_idx = 0
+for idx_user in range(len(reviewer_info)):
+    #Create the user node and add it to the tracker list
+    currUser_dict = reviewer_info[idx_user]
+    try:
+        user_instance = UserNode(currUser_dict)
+    except:
+        print('DEAD USER~~~~')
+        print('PASSING...')
+        continue
+
+    covered_users.append(user_instance)
+    user_idx = covered_users.index(user_instance)
+
+    #Now, iterate through the user's books
+    for idx_book in range(len(currUser_dict['ratings'])):
+        currBook_dict = currUser_dict['ratings'][idx_book]
+
+        #Check that the book is not in the net already
+        #Track by full object pointer in the list
+        book_instance = BookNode(currBook_dict)
+        covered_book_hrefs = [i.href for i in covered_books]
+
+        if book_instance.href not in covered_book_hrefs: #use hrefs for consistent string comprehension
+            covered_books.append( book_instance )
+            book_idx = len(covered_books) - 1
+        else:
+            #find the existing object in the list by searching through the hrefs
+            book_idx = covered_book_hrefs.index(book_instance.href)
+
+        #Now that we have the correct book object, let's add to both the book and user reference lists
+        #first is book instance --> rater
+        inRater = covered_users[user_idx]
+        inScore = currBook_dict['score']
+        covered_books[book_idx].add_rater(inRater, inScore)
+
+
+        #second is user instance --> book
+        inBook = covered_books[book_idx]
+        inScore = currBook_dict['score']
+        covered_users[user_idx].add_book(inBook, inScore)
+
+
+
+# Finally...let's save the original book that gave us these users to begin with
+# First check that the book isn't already in the covered_books list (it probably is lol)
+master_book_id = book_info['ID']
+id_list = [icc.ID for icc in covered_books]
+if master_book_id in id_list:
+    master_idx = id_list.index(master_book_id)
+
+else:
+    try:
+        master_book_instance = BookNode(book_info)
+    except:
+        print('Using old book_info structure...creating href')
+        book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
+        master_book_instance = BookNode(book_info)
+
+    covered_books.append(master_book_instance)
+    master_idx = id_list.index(master_book_instance.ID)
+
+covered_books[master_idx].add_full_book_info(book_info)
+
+# Now, add to each user that reviewed the book (which is all covered users) to the reviewed user list
+covered_books[master_idx].add_reviewers(covered_users)
+
+# Finally, add this master book as an item in the book list for each user
+# To perserve structure and give identification, add as a 4.5 score
+for each_user in covered_users:
+    each_user.add_book(covered_books[master_idx], 4.5)
+
+
+
+
+
+
+# Save the newly created covered_users and covered_books lists to test the file size!
+
+sys.setrecursionlimit(100000)
+with open('temp_data_0_nodalStructure.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+    pickle.dump([covered_users, covered_books], f)
+
 
 
 ## STATS:
