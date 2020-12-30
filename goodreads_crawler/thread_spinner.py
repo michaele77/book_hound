@@ -77,8 +77,8 @@ API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
 
 url_location = 'https://www.goodreads.com/book/show/'
 book_reference_number = 186074 #Name of the Wind
-book_reference_number = 61535  #Selfish gene (sunbins fav)
-book_reference_number = 14891  #A Tree Grows in Brooklyn (Belindas fav)
+# book_reference_number = 61535  #Selfish gene (sunbins fav)
+# book_reference_number = 14891  #A Tree Grows in Brooklyn (Belindas fav)
 
 chrome_options = webdriver.chrome.options.Options()
 # chrome_options.add_argument("--headless")
@@ -370,25 +370,8 @@ def add_to_reviewerInfo(curr_user, i, curr_thread):
     reviewer_info[i]['name'] = curr_user.attrs['name']
     reviewer_info[i]['link'] = curr_user.attrs['href']
 
-    # # Step into the user's page
-    # goodreads_root = 'https://www.goodreads.com'
-    # user_soup = get_payload(goodreads_root + reviewer_info[i]['link'])
-    #
-    # # Hit the ratings list button (NOTE: change this if we want to avoid an extra link to press)
-    # error_return = hit_ratings_button(user_soup, i)
-    #
-    # if error_return == 77:
-    #     #This means the user's page is private! so skip them
-    #     print('ENCOUNTERED DEAD USER, PASSING <<<')
-    #     return
-
     # Add the link to the reviewer_info structure
     add_userRating_link(i)
-
-
-
-    # Step into the user's ratings page
-    # NOTE: can change how the ratings are sorted by changing the "sort=ratings" bit
 
     print('Thread {0} on index {1}'.format(curr_thread, i))
 
@@ -494,6 +477,26 @@ for cnt_i in range(user_page_num):
 
     curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
     curr_page_reviews = list(curr_page_soup.select('.user'))
+
+    # Now, if the user's review is 3 or less stars, kick them off the list
+    reviewer_stars = list(curr_page_soup.select('.staticStars.notranslate'))
+    reviewer_stars = reviewer_stars[2:]  # Now this list corresponds to the reviewer list
+    reviewer_stars = [curri.attrs['title'] for curri in reviewer_stars]  # Now should be the pure string
+
+    kickoff_list = []
+    for iterI, curr_stars in enumerate(reviewer_stars):
+        star_num = star_assignment[curr_stars]
+        if star_num <= 3:
+            # If the review was not good, skip this person
+            # Add to a "kick off" list first so that a pop error doesnt occur
+            print('POP off person {0}'.format(iterI))
+            kickoff_list.append(iterI)
+
+    # Now proceed to actually pop these people
+    for index in sorted(kickoff_list, reverse=True):
+        del curr_page_reviews[index] # del is same as pop, but doesnt return a value (so its probably faster...)
+
+
     book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
 
 
@@ -502,8 +505,6 @@ for cnt_i in range(user_page_num):
 ## Threading time!
 ## Spin off however many threads is allowed, make each run the function that extracts reviewers' info
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-
 
 
 reviewer_info = [0]*len(book_info['reviewers'])
