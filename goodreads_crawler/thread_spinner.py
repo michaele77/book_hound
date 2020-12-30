@@ -322,8 +322,8 @@ def get_genre_list(book_info):
         temp_combo_list = temp_content[1].contents
         for curr_combo in temp_combo_list:
             try:
-                plain_string_list.append( curr_combo.contents[0] )
-                href_list.append( curr_combo.attrs['href'] )
+                plain_string_list.append( str(curr_combo.contents[0]) )
+                href_list.append( str(curr_combo.attrs['href']) )
             except:
                 # If we hit here, it's some sort of newline or something
                 continue
@@ -438,7 +438,7 @@ def review_collection_thread_function(thread_num):
 #                                   MAIN                                      #
 #-----------------------------------------------------------------------------#
 
-if False:
+if True:
     soup = get_page(url_location+str(book_reference_number))
 
     #Get general book info
