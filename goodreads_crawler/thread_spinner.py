@@ -77,8 +77,6 @@ from node_structure import UserNode
 API_KEY = get_scraper_API_KEY()
 client = ScraperAPIClient(API_KEY)
 
-API_KEY = '445b0c65f0d18958ea2a4cd0356bfdcb'
-
 url_location = 'https://www.goodreads.com/book/show/'
 book_reference_number = 186074 #Name of the Wind
 # book_reference_number = 61535  #Selfish gene (sunbins fav)
