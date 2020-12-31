@@ -446,7 +446,7 @@ while True:
         print('Farewell!')
         break
 
-    book_reference_number = ID_toScrape
+    book_reference_number = int(ID_toScrape)
     soup = get_page(url_location+str(book_reference_number))
 
     #Get general book info
@@ -480,11 +480,15 @@ while True:
     book_info['reviewers'] = []
 
     #Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
-    time.sleep(.5)
-    close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
-    element = driver.find_element_by_xpath(close_XPATH)
-    element.click()
-    time.sleep(2)
+    try:
+        time.sleep(.5)
+        close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
+        element = driver.find_element_by_xpath(close_XPATH)
+        element.click()
+        time.sleep(2)
+    except:
+        print('Dont need to click the close button!')
+        time.sleep(2)
 
     #Append however many user pages we want to go through!
     user_page_num = searchParam_max_users
@@ -495,7 +499,11 @@ while True:
 
         # The first click when cnt_i == 0 just brings us down to the bottom page, and doesn't bring new info...
         element = driver.find_element_by_class_name('next_page')
-        element.click()
+        try:
+            element.click()
+        except:
+            print('entered button click intercepted error...trying a bandaid...')
+            driver.execute_script("arguments[0].click();", element)
 
         curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
         curr_page_reviews = list(curr_page_soup.select('.user'))
@@ -650,6 +658,7 @@ while True:
             master_book_instance = BookNode(book_info)
 
         covered_books.append(master_book_instance)
+        id_list.append(master_book_instance.ID)
         master_idx = id_list.index(master_book_instance.ID)
 
     covered_books[master_idx].add_full_book_info(book_info)
@@ -674,8 +683,8 @@ while True:
     mark_line_as_finished(scrape_ref_idx)
 
 ## STATS on DEC/31/2020:
-## Starting from 0 books collected, initiating run on 2:40PM
-## 
+## Starting from 0 books collected, initiating run on 2:50PM
+## Starting with 2114 used requests (out of 5000)
 
 
 ## STATS:

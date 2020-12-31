@@ -146,7 +146,7 @@ def get_latest_id():
         next_ID_toCollect = 'ERRORCODE'
 
         for i, row in enumerate(csvreader):
-            if row[6] == '1':
+            if row[6] == '0':
                 next_indx_toCollect = i
                 next_ID_toCollect = row[0]
                 break
