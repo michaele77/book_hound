@@ -556,120 +556,131 @@ while True:
 ## Save to file
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-    ogRecLimit = sys.getrecursionlimit()
+#     ogRecLimit = sys.getrecursionlimit()
+#     sys.setrecursionlimit(100000)
+#     with open('temp_data_0.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+#         pickle.dump([book_info, reviewer_info], f)
+#
+#
+# # Getting back the objects:
+# with open('temp_data_0.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+#     book_info, reviewer_info = pickle.load(f)
+#
+# sys.setrecursionlimit(100)
+
+
+
+
+
+    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    ## Add info to nodes
+    ## leverage the node_structure.py file imported
+    ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+    #Create the network with the correct class assignments
+    #For each book (in this case, 1) iterate through all of the users
+    #Create a user node for each user, and a book node for each of their corresponding rated books
+    #For each user's books, search that this book is not in the network before adding it
+    print(' Thread scraping is done! ')
+    print(' ')
+    print(' ')
+    print(' Now converting to nodal structure... ')
+    print(' ')
+    print(' ')
+
+    covered_books = [] #list to keep track of books that have been added to the net
+    covered_users = [] #list to keep track of users that have been added to the net
+    book_idx = 0
+    for idx_user in range(len(reviewer_info)):
+        #Create the user node and add it to the tracker list
+        currUser_dict = reviewer_info[idx_user]
+        try:
+            user_instance = UserNode(currUser_dict)
+        except:
+            print('DEAD USER~~~~')
+            print('PASSING...')
+            continue
+
+        covered_users.append(user_instance)
+        user_idx = covered_users.index(user_instance)
+
+        #Now, iterate through the user's books
+        for idx_book in range(len(currUser_dict['ratings'])):
+            currBook_dict = currUser_dict['ratings'][idx_book]
+
+            #Check that the book is not in the net already
+            #Track by full object pointer in the list
+            book_instance = BookNode(currBook_dict)
+            covered_book_hrefs = [i.href for i in covered_books]
+
+            if book_instance.href not in covered_book_hrefs: #use hrefs for consistent string comprehension
+                covered_books.append( book_instance )
+                book_idx = len(covered_books) - 1
+            else:
+                #find the existing object in the list by searching through the hrefs
+                book_idx = covered_book_hrefs.index(book_instance.href)
+
+            #Now that we have the correct book object, let's add to both the book and user reference lists
+            #first is book instance --> rater
+            inRater = covered_users[user_idx]
+            inScore = currBook_dict['score']
+            covered_books[book_idx].add_rater(inRater, inScore)
+
+
+            #second is user instance --> book
+            inBook = covered_books[book_idx]
+            inScore = currBook_dict['score']
+            covered_users[user_idx].add_book(inBook, inScore)
+
+
+
+    # Finally...let's save the original book that gave us these users to begin with
+    # First check that the book isn't already in the covered_books list (it probably is lol)
+    master_book_id = book_info['ID']
+    id_list = [icc.ID for icc in covered_books]
+    if master_book_id in id_list:
+        master_idx = id_list.index(master_book_id)
+
+    else:
+        try:
+            master_book_instance = BookNode(book_info)
+        except:
+            print('Using old book_info structure...creating href')
+            book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
+            master_book_instance = BookNode(book_info)
+
+        covered_books.append(master_book_instance)
+        master_idx = id_list.index(master_book_instance.ID)
+
+    covered_books[master_idx].add_full_book_info(book_info)
+
+    # Now, add to each user that reviewed the book (which is all covered users) to the reviewed user list
+    covered_books[master_idx].add_reviewers(covered_users)
+
+    # Finally, add this master book as an item in the book list for each user
+    # To perserve structure and give identification, add as a 4.5 score
+    for each_user in covered_users:
+        each_user.add_book(covered_books[master_idx], 4.5)
+
+
+    # Save the newly created covered_users and covered_books lists to test the file size!
+
     sys.setrecursionlimit(100000)
-    with open('temp_data_0.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-        pickle.dump([book_info, reviewer_info], f)
+    location_to_pickle = 'scraped_data/' + str(book_info['title']) + '_' + str(book_info['ID']) + '.pkl'
+    with open(location_to_pickle, 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump([covered_users, covered_books], f)
 
 
-# Getting back the objects:
-with open('temp_data_0.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
-    book_info, reviewer_info = pickle.load(f)
+    mark_line_as_finished(scrape_ref_idx)
 
-sys.setrecursionlimit(100)
-
-
-
-
-
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-## Add info to nodes
-## leverage the node_structure.py file imported
-## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
-#Create the network with the correct class assignments
-#For each book (in this case, 1) iterate through all of the users
-#Create a user node for each user, and a book node for each of their corresponding rated books
-#For each user's books, search that this book is not in the network before adding it
-
-covered_books = [] #list to keep track of books that have been added to the net
-covered_users = [] #list to keep track of users that have been added to the net
-book_idx = 0
-for idx_user in range(len(reviewer_info)):
-    #Create the user node and add it to the tracker list
-    currUser_dict = reviewer_info[idx_user]
-    try:
-        user_instance = UserNode(currUser_dict)
-    except:
-        print('DEAD USER~~~~')
-        print('PASSING...')
-        continue
-
-    covered_users.append(user_instance)
-    user_idx = covered_users.index(user_instance)
-
-    #Now, iterate through the user's books
-    for idx_book in range(len(currUser_dict['ratings'])):
-        currBook_dict = currUser_dict['ratings'][idx_book]
-
-        #Check that the book is not in the net already
-        #Track by full object pointer in the list
-        book_instance = BookNode(currBook_dict)
-        covered_book_hrefs = [i.href for i in covered_books]
-
-        if book_instance.href not in covered_book_hrefs: #use hrefs for consistent string comprehension
-            covered_books.append( book_instance )
-            book_idx = len(covered_books) - 1
-        else:
-            #find the existing object in the list by searching through the hrefs
-            book_idx = covered_book_hrefs.index(book_instance.href)
-
-        #Now that we have the correct book object, let's add to both the book and user reference lists
-        #first is book instance --> rater
-        inRater = covered_users[user_idx]
-        inScore = currBook_dict['score']
-        covered_books[book_idx].add_rater(inRater, inScore)
-
-
-        #second is user instance --> book
-        inBook = covered_books[book_idx]
-        inScore = currBook_dict['score']
-        covered_users[user_idx].add_book(inBook, inScore)
-
-
-
-# Finally...let's save the original book that gave us these users to begin with
-# First check that the book isn't already in the covered_books list (it probably is lol)
-master_book_id = book_info['ID']
-id_list = [icc.ID for icc in covered_books]
-if master_book_id in id_list:
-    master_idx = id_list.index(master_book_id)
-
-else:
-    try:
-        master_book_instance = BookNode(book_info)
-    except:
-        print('Using old book_info structure...creating href')
-        book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
-        master_book_instance = BookNode(book_info)
-
-    covered_books.append(master_book_instance)
-    master_idx = id_list.index(master_book_instance.ID)
-
-covered_books[master_idx].add_full_book_info(book_info)
-
-# Now, add to each user that reviewed the book (which is all covered users) to the reviewed user list
-covered_books[master_idx].add_reviewers(covered_users)
-
-# Finally, add this master book as an item in the book list for each user
-# To perserve structure and give identification, add as a 4.5 score
-for each_user in covered_users:
-    each_user.add_book(covered_books[master_idx], 4.5)
-
-
-# Save the newly created covered_users and covered_books lists to test the file size!
-
-sys.setrecursionlimit(100000)
-with open('temp_data_0_nodalStructure.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-    pickle.dump([covered_users, covered_books], f)
-
-
-mark_line_as_finished(scrape_ref_idx)
+## STATS on DEC/31/2020:
+## Starting from 0 books collected, initiating run on 2:40PM
+## 
 
 
 ## STATS:
 ## Took 13 minutes with 4 threads (didn't seem like thread 0 was up...) for 150 users...
 ## Took 810-395 = 415 requests
 
-x = 7 # BREAKLOOP...stop here
+pass
 
