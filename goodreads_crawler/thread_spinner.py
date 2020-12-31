@@ -67,7 +67,8 @@ import threading
 from config import get_scraper_API_KEY
 from node_structure import BookNode
 from node_structure import UserNode
-
+from collect_books import get_latest_id
+from collect_books import mark_line_as_finished
 
 
 #-----------------------------------------------------------------------------#
@@ -432,7 +433,20 @@ def review_collection_thread_function(thread_num):
 #                                   MAIN                                      #
 #-----------------------------------------------------------------------------#
 
-if True:
+## Time to loop through out book_list.txt file!
+## Note: any book_list.txt reading or modification will be through functions imported in collect_books.py
+
+
+# loop until it is broken by a returned ERRORCODE
+while True:
+    scrape_ref_idx, ID_toScrape = get_latest_id()
+
+    if scrape_ref_idx == 'ERRORCODE':
+        print('We have reached the end of our list. Terminating program.')
+        print('Farewell!')
+        break
+
+    book_reference_number = ID_toScrape
     soup = get_page(url_location+str(book_reference_number))
 
     #Get general book info
@@ -535,9 +549,6 @@ if True:
     ## Spin up the threads!
     with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
         executor.map(review_collection_thread_function, range(5))
-
-
-
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -646,14 +657,14 @@ for each_user in covered_users:
     each_user.add_book(covered_books[master_idx], 4.5)
 
 
-
-
 # Save the newly created covered_users and covered_books lists to test the file size!
 
 sys.setrecursionlimit(100000)
 with open('temp_data_0_nodalStructure.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
     pickle.dump([covered_users, covered_books], f)
 
+
+mark_line_as_finished(scrape_ref_idx)
 
 
 ## STATS:

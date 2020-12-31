@@ -16,14 +16,12 @@ from bs4 import BeautifulSoup
 from bs4 import SoupStrainer
 from selenium import webdriver
 from collections import Counter
+import datetime
 
 #-----------------------------------------------------------------------------#
 #                               PRE-DEFINES                                   #
 #-----------------------------------------------------------------------------#
 
-
-chrome_options = webdriver.chrome.options.Options()
-driver = webdriver.Chrome(options=chrome_options)
 
 
 data_fields = ['Book ID', 'Book Title', 'Book Author', 'Book Link',
@@ -139,6 +137,61 @@ def exctract_csv_to_list():
     return out_list
 
 
+def get_latest_id():
+    with open('book_list.csv', 'r') as csvfile: #open in read mode
+        csvreader = csv.reader(csvfile)
+
+        # Assign vars to ERRORCODES so we know when the list is finished
+        next_indx_toCollect = 'ERRORCODE'
+        next_ID_toCollect = 'ERRORCODE'
+
+        for i, row in enumerate(csvreader):
+            if row[6] == '1':
+                next_indx_toCollect = i
+                next_ID_toCollect = row[0]
+                break
+
+
+    return next_indx_toCollect, next_ID_toCollect
+
+
+def write_back_list( list_to_write ):
+    # Overwrite the csv file
+    with open('book_list.csv', 'w') as csvfile:
+        # creating a csv writer object
+        csvwriter = csv.writer(csvfile)
+
+        # writing the fields
+        for curr_row in list_to_write:
+            csvwriter.writerow( curr_row )
+
+
+
+def mark_line_as_finished(index_toMark):
+    with open("book_list.csv", "r+") as f:
+        csvreader = csv.reader(f)
+
+        contents = []
+        # gives you a list of the lines
+        for row in csvreader:
+            contents.append(row)
+
+
+        # delete the old line and insert the new one
+        temp_list = contents.pop(index_toMark)
+
+        # Now modify the list to change the 'collected' and 'dates' columns
+        temp_list[6] = '1'
+        temp_list[7] = str( datetime.datetime.now() )
+
+        contents.insert(index_toMark, temp_list)
+        # # join all lines and write it back
+        # contents = "".join(contents)
+
+        write_back_list( contents )
+        pass
+
+
 
 # -----------------------------------------------------------------------------#
 #                                   MAIN                                       #
@@ -147,6 +200,11 @@ def exctract_csv_to_list():
 
 # Create proper main structure
 if __name__ == "__main__":
+
+    chrome_options = webdriver.chrome.options.Options()
+    driver = webdriver.Chrome(options=chrome_options)
+
+
     # if True:
     create_log_file('book_list.csv')
     print(choiceawards_list)
