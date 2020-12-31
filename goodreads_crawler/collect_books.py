@@ -15,7 +15,7 @@ import time
 from bs4 import BeautifulSoup
 from bs4 import SoupStrainer
 from selenium import webdriver
-
+from collections import Counter
 
 #-----------------------------------------------------------------------------#
 #                               PRE-DEFINES                                   #
@@ -31,30 +31,34 @@ data_fields = ['Book ID', 'Book Title', 'Book Author', 'Book Link',
 
 # Let's create a booklist from the most popular books:
 year_list = [2010+i for i in range(1,11)]
-genre_list = ['fiction',
-              'mystery-thriller',
-              'historical-fiction',
-              'fantasy',
-              'romance',
-              'science-fiction',
-              'horror',
-              'humor',
-              'nonfiction',
-              'memoir-autobiography',
-              'history-biography',
-              'science-technology',
-              'food-cookbooks',
-              'graphics-novels-comics',
-              'poetry',
+genre_list = ['fiction-books',
+              'mystery-thriller-books',
+              'historical-fiction-books',
+              'fantasy-books',
+              'romance-books',
+              'science-fiction-books',
+              'horror-books',
+              'humor-books',
+              'nonfiction-books',
+              'memoir-autobiography-books',
+              'history-biography-books',
+              'science-technology-books',
+              # 'food-cookbooks', # Who tries to find more cookbooks...
+              'graphic-novels-comics',
+              'poetry-books',
               'debut-novel',
-              'young-adult-fiction',
-              'young-adult-fantasy']
+              'young-adult-fiction-books',
+              'young-adult-fantasy-books',
+              # all of the genres below are only for a few years...
+              'debut-goodreads-author',
+              'of-the-best']
 choiceawards_list = []
 
 for curr_year in reversed(year_list):
     for curr_genre in genre_list:
-        choiceawards_list.append('https://www.goodreads.com/choiceawards/best-' + curr_genre + '-books-' + str(curr_year))
+        choiceawards_list.append('https://www.goodreads.com/choiceawards/best-' + curr_genre + '-' + str(curr_year))
 
+master_ID_check = []
 
 
 
@@ -92,7 +96,12 @@ def extract_book_ids(in_soup):
     out_list = []
 
     for i in range(len(out_ids)):
-        out_list.append((out_ids[i], out_title[i], out_authors[i], out_hrefs[i]))
+        # Check that the ID has not been encountered
+        if out_ids[i] not in master_ID_check:
+            master_ID_check.append(out_ids[i])
+            out_list.append((out_ids[i], out_title[i], out_authors[i], out_hrefs[i]))
+        else:
+            print('Skipping ID {0}, its already in the list!'.format(out_ids[i]))
 
     return out_list
 
@@ -119,6 +128,15 @@ def add_list_to_txt(list_link, tuple_list):
 
 
 
+def exctract_csv_to_list():
+    with open('book_list.csv', 'r') as csvfile: #open in read mode
+        csvreader = csv.reader(csvfile)
+        out_list = []
+
+        for row in csvreader:
+            out_list.append(row)
+
+    return out_list
 
 
 
@@ -129,6 +147,7 @@ def add_list_to_txt(list_link, tuple_list):
 
 # Create proper main structure
 if __name__ == "__main__":
+    # if True:
     create_log_file('book_list.csv')
     print(choiceawards_list)
 
@@ -141,6 +160,9 @@ if __name__ == "__main__":
 
         # Add to the text file the collected book info with the respective list
         add_list_to_txt(curr_link, curr_tuple_list)
+
+
+    master_list = exctract_csv_to_list()
 
 
 
