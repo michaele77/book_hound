@@ -83,6 +83,7 @@ url_location = 'https://www.goodreads.com/book/show/'
 book_reference_number = 186074 #Name of the Wind
 # book_reference_number = 61535  #Selfish gene (sunbins fav)
 # book_reference_number = 14891  #A Tree Grows in Brooklyn (Belindas fav)
+book_reference_number = 35342928 # Age of War
 
 chrome_options = webdriver.chrome.options.Options()
 # chrome_options.add_argument("--headless")
@@ -293,7 +294,7 @@ def extract_img(img_src_str):
     return out
 
 def save_img_file(book_dict, inBits):
-    file = open('cover_photos/' + book_dict['title'] + '-' + str(book_dict['ID']) + '.jpg', 'wb')
+    file = open('cover_photos/' + book_dict['title'] + '_' + str(book_dict['ID']) + '.jpg', 'wb')
     file.write(inBits)
     file.close()
 
@@ -429,11 +430,6 @@ def review_collection_thread_function(thread_num):
 
 
 
-
-
-
-
-
 #-----------------------------------------------------------------------------#
 #                                   MAIN                                      #
 #-----------------------------------------------------------------------------#
@@ -493,9 +489,22 @@ if True:
         curr_page_reviews = list(curr_page_soup.select('.user'))
 
         # Now, if the user's review is 3 or less stars, kick them off the list
-        reviewer_stars = list(curr_page_soup.select('.staticStars.notranslate'))
-        reviewer_stars = reviewer_stars[2:]  # Now this list corresponds to the reviewer list
-        reviewer_stars = [curri.attrs['title'] for curri in reviewer_stars]  # Now should be the pure string
+        # reviewer_stars = list(curr_page_soup.select('.staticStars.notranslate'))
+        # reviewer_stars = reviewer_stars[2:]  # Now this list corresponds to the reviewer list
+        # reviewer_stars = [curri.attrs['title'] for curri in reviewer_stars]  # Now should be the pure string
+
+        # Fixing a bug! This would offset users and stars if no stars were given...
+        # By default, include these no stars as 4
+        info_list = list(curr_page_soup.select('.reviewHeader.uitext.stacked'))
+        reviewer_stars = []
+        for iii, curr_user_info in enumerate(info_list):
+            try:
+                temp_str = curr_user_info.contents[5]['title']
+            except:
+                print('Found a no-star reviewer! Lets add them (index {0})'.format(iii))
+                temp_str = 'really liked it' # fake a 4 star rating!
+            reviewer_stars.append(temp_str)
+
 
         kickoff_list = []
         for iterI, curr_stars in enumerate(reviewer_stars):
@@ -637,8 +646,6 @@ covered_books[master_idx].add_reviewers(covered_users)
 # To perserve structure and give identification, add as a 4.5 score
 for each_user in covered_users:
     each_user.add_book(covered_books[master_idx], 4.5)
-
-
 
 
 
