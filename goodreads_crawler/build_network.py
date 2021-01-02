@@ -20,6 +20,7 @@
 import os
 import pickle
 from collections import Counter
+import numpy as np
 
 
 
@@ -44,6 +45,28 @@ def get_repeated_instances(instance_arr, id_list_toCheck, ID_toCheck):
     repeated_indx = [i for i, x in enumerate(id_list_toCheck) if x == ID_toCheck]
     instance_list = [instance_arr[i] for i in repeated_indx]
     return instance_list, repeated_indx
+
+def get_repeated_book_instances(instance_arr, id_list_toCheck, title_to_check):
+    # Check titles
+    # Use numpy to speed this up a bit
+    # string_comp_list = [i.title for i in instance_arr]
+    # string_comp_arr = np.array(string_comp_list)
+    # bool_arr = string_comp_arr == title_to_check
+
+    repeated_indx = []
+    instance_list = []
+    for i, curr_Inst in enumerate(instance_arr):
+        curr_str = curr_Inst.title
+        if curr_str == title_to_check:
+            repeated_indx.append(i)
+            instance_list.append(instance_arr[i])
+
+    return instance_list, repeated_indx
+
+    # repeated_indx = [i for i, x in enumerate(instance_arr) if x.title == title_to_check]
+    # instance_list = [instance_arr[i] for i in repeated_indx]
+    # return instance_list, repeated_indx
+
 
 
 def consolidate_user_list(fnc_master_list, fnc_id_list, fnc_user_inst, fnc_user_idx):
@@ -101,10 +124,23 @@ def consolidate_book_list(fnc_master_list, fnc_id_list, fnc_book_inst, fnc_book_
             master_node = curr_book_list[ find_true_list[0] ]
             master_idx = find_true_list[0]
             has_master_flag = True
-        # Otherwise, choose any one to be the master
+        # Otherwise, choose the instance with the most raters! one to be the master
         else:
-            master_node = curr_book_list[0]
-            master_idx = 0
+            max_rater_len = 0
+            chosen_one = None
+            try:
+                pointing_val = int(curr_book_list[0].href.split('/')[-1].split('-')[0])
+            except:
+                pointing_val = int(curr_book_list[0].href.split('/')[-1].split('.')[0])
+            for ii, cb in enumerate(curr_book_list):
+                if len(cb.raters) > max_rater_len and cb.ID == pointing_val:
+                    max_rater_len = len(cb.raters)
+                    chosen_one = cb
+                    master_idx = ii
+
+            master_node = chosen_one
+            # master_node = curr_book_list[0]
+            # master_idx = 0
 
         for vv, other_node in enumerate(curr_book_list):
             if vv == master_idx:
@@ -141,8 +177,13 @@ def consolidate_book_list(fnc_master_list, fnc_id_list, fnc_book_inst, fnc_book_
 
 
     # Now go through the pop list backwards and pop em all off!
-    indx_to_pop.sort()  # sort it first inplace
-    for i in reversed(indx_to_pop):
+    # indx_to_pop.sort()  # sort it first inplace
+    # Now, because we were searching for title only, we can get a repeat offense of a duplicate ID AND a mismatch string
+    # So it would be double counted in our indx_to_pop list
+    # So reduce the list down to only the unique elements
+    unique_popList = list(Counter(indx_to_pop).keys())
+    unique_popList.sort()
+    for i in reversed(unique_popList):
         fnc_master_list.pop(i)
         fnc_id_list.pop(i)
 
@@ -152,6 +193,8 @@ def search_book_list(master_list, search_term, search_field = 'title'):
         searched_list_indx = [i for i,v in enumerate(master_list) if v.title == search_term]
     elif search_field == 'ID':
         searched_list_indx = [i for i, v in enumerate(master_list) if v.ID == search_term]
+    elif search_field == 'href':
+        searched_list_indx = [i for i, v in enumerate(master_list) if v.href == search_term]
     elif search_field == 'rater number greater than':
         out_instance_list = []
         out_idx_list = []
@@ -160,6 +203,16 @@ def search_book_list(master_list, search_term, search_field = 'title'):
                 out_instance_list.append(curr_search)
                 out_idx_list.append(curI)
         return out_idx_list, out_instance_list
+
+    elif search_field == 'title contains':
+        out_instance_list = []
+        out_idx_list = []
+        for curI, curr_search in enumerate(master_list):
+            if search_term.lower() in curr_search.title.lower():
+                out_instance_list.append(curr_search)
+                out_idx_list.append(curI)
+        return out_idx_list, out_instance_list
+
 
     # TODO: Add more terms here! For example genre (contains any), reviewer number, etc
 
@@ -228,9 +281,10 @@ if __name__ == "__main__":
     id_counts = list(c_books.values())
     for i, curr_book_id in enumerate(list(c_books.keys())):
         if id_counts[i] > 1:
-            temp_repeated_element = curr_book_id
-            instance_list, temp_indices = get_repeated_instances(master_book_list, master_book_IDs,
-                                                                 temp_repeated_element)
+            ins_list_temp = [xx for xx,vvv in enumerate(master_book_list) if vvv.ID == curr_book_id]
+            this_title = master_book_list[ins_list_temp[0]].title #Doesn't matter which one, they're identical
+            instance_list, temp_indices = get_repeated_book_instances(master_book_list, master_book_IDs,
+                                                                 this_title)
 
             repeated_books_list.append(instance_list)
             repeated_books_indx.append(temp_indices)
@@ -270,13 +324,13 @@ if __name__ == "__main__":
 
     # urlNum = [1]  # some harry potter book
     # urlNum = [20518872]  # The Three Body Problem
-    # urlNum = [186074]  # The Name of the Wind
+    # urlNum = [6266872]  # The Name of the Wind
     # # urlNum = [13569581] #Blood Song
     # urlNum = [14891]  # A Tree Grows in Brooklyn (Belindas fav)
     # urlNum = [28077464] #Night school (gma fav)
     # urlNum = [61535] #Selfish gene (sunbins fav)
     # urlNum = [13376] #The House of scorpion (Kim's fav)
-    searched_index, returned_instance = search_book_list(master_book_list, 186074, search_field='ID') # Name of the wind
+    searched_index, returned_instance = search_book_list(master_book_list, 6266872, search_field='ID') # Name of the wind
     a = returned_instance.title
     searched_index, returned_instance = search_book_list(master_book_list, a,
                                                          search_field='title')
