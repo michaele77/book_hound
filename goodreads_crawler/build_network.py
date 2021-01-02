@@ -40,6 +40,7 @@ except:
 
 
 def get_repeated_instances(instance_arr, id_list_toCheck, ID_toCheck):
+    # Check IDs
     repeated_indx = [i for i, x in enumerate(id_list_toCheck) if x == ID_toCheck]
     instance_list = [instance_arr[i] for i in repeated_indx]
     return instance_list, repeated_indx
@@ -82,12 +83,88 @@ def consolidate_user_list(fnc_master_list, fnc_id_list, fnc_user_inst, fnc_user_
 
 
 
-def consolidate_user_list(fnc_master_list, fnc_id_list, fnc_book_inst, fnc_book_idx):
+def consolidate_book_list(fnc_master_list, fnc_id_list, fnc_book_inst, fnc_book_idx):
+    indx_to_pop = []
+    # For each repeated book, update one master node, and pop the rest from the master list
+    # Master shall be the book with full params, index 0 otherwise
+    for i in range(len(fnc_book_inst)):
+        has_master_flag = False
+
+        curr_book_list = fnc_book_inst[i]
+        curr_indx_list = fnc_book_idx[i]
+
+        # If one of the books has full params set that as the master
+        truthArr = [curI.has_full_params for curI in curr_book_list]
+        if any(truthArr):
+            print('We got a full parameters book!')
+            find_true_list = [cci for cci, x in enumerate(truthArr) if x]
+            master_node = curr_book_list[ find_true_list[0] ]
+            master_idx = find_true_list[0]
+            has_master_flag = True
+        # Otherwise, choose any one to be the master
+        else:
+            master_node = curr_book_list[0]
+            master_idx = 0
+
+        for vv, other_node in enumerate(curr_book_list):
+            if vv == master_idx:
+                # Already set master node
+                pass
+            else:
+                # Now lets combine raters lists
+                # Check to make sure that the user is not double represented!
+                new_user_list = other_node.raters
+                new_ID_list = other_node.raters_ID
+                for iterC in range(len(new_ID_list)):
+                    curr_user = new_user_list[iterC]
+                    curr_ID   = new_ID_list[iterC]
+
+
+                    # If we check that its not double represented, then we're in baby
+                    if curr_ID not in master_node.raters_ID:
+                        # print('adding a new one...')
+
+                        # Add it to the master node
+                        master_node.raters.append(curr_user)
+                        master_node.raters_ID.append(curr_ID)
+
+                    else:
+                        pass
+
+                # Add it to the pop list
+                if has_master_flag:
+                    print('before: {0}'.format(len(indx_to_pop)))
+                indx_to_pop.append(curr_indx_list[vv])
+                if has_master_flag:
+                    print('after: {0}'.format(len(indx_to_pop)))
 
 
 
+    # Now go through the pop list backwards and pop em all off!
+    indx_to_pop.sort()  # sort it first inplace
+    for i in reversed(indx_to_pop):
+        fnc_master_list.pop(i)
+        fnc_id_list.pop(i)
 
 
+def search_book_list(master_list, search_term, search_field = 'title'):
+    if search_field == 'title':
+        searched_list_indx = [i for i,v in enumerate(master_list) if v.title == search_term]
+    elif search_field == 'ID':
+        searched_list_indx = [i for i, v in enumerate(master_list) if v.ID == search_term]
+    elif search_field == 'rater number greater than':
+        out_instance_list = []
+        out_idx_list = []
+        for curI, curr_search in enumerate(master_list):
+            if len(curr_search.raters) > search_term:
+                out_instance_list.append(curr_search)
+                out_idx_list.append(curI)
+        return out_idx_list, out_instance_list
+
+    # TODO: Add more terms here! For example genre (contains any), reviewer number, etc
+
+    searched_indx = searched_list_indx[0]
+    return searched_indx, master_list[searched_indx]
 
 
 # -----------------------------------------------------------------------------#
@@ -145,18 +222,80 @@ if __name__ == "__main__":
 
 
 
-
-    # repeated_books = [ret]
-    x = 7
-
-
-    # Then we can
-    repeated_books_id_list = []
+    # Get a list of lists. Each entree is a list of the repeated user instances
+    repeated_books_list = []
+    repeated_books_indx = []
     id_counts = list(c_books.values())
     for i, curr_book_id in enumerate(list(c_books.keys())):
         if id_counts[i] > 1:
-            repeated_books_id_list.append( curr_book_id )
+            temp_repeated_element = curr_book_id
+            instance_list, temp_indices = get_repeated_instances(master_book_list, master_book_IDs,
+                                                                 temp_repeated_element)
 
-    # repeated_books = [ret]
+            repeated_books_list.append(instance_list)
+            repeated_books_indx.append(temp_indices)
+
+        if i % 100 == 0:
+            print(i)
+
+    consolidate_book_list(master_book_list, master_book_IDs, repeated_books_list, repeated_books_indx)
+
+
+
+
+
+    ## BIG NOTE on searching by title:
+    ## Many books (apparently) have 'twins' or aliases
+    ## These are seemingly the exact same book, but with different IDs, summary, and maybe cover
+    ## However, the reviews are shared and its the same book
+
+    ## This usually happens as a result of a best-seller making another page to spice it up or something
+    ## This is usually not an issue, because the 'main' page that we scraped usually has way more raters anyway,
+    ## and the aliased versions usually barely have any
+
+    ## However, when we are collecting full parameters for all of the books after scraping, we should add a field in
+    ## the book node indicating 'aliases' and perhaps just combining the nodes entirely. We could also do it here later
+
+    ## One okish solution is to 1) change what qualifies as a repitition (check ID AND name cohesion)
+    ##                          2) When picking which master to choose, choose the one that has the most raters (not neccesary)
+    ## TODO: implement the stuff described above~~
+
+    # Now we have a condensed master and user list, this is distilled gold!
+    # Now we can do fun things like search our master lists based on things like 'book title'
+
+    searched_index, returned_instance = search_book_list(master_book_list, 'Anxious People' , search_field = 'title')
+    searched_index, returned_instance = search_book_list(master_book_list, 'My Dark Vanessa', search_field='title')
+
+    searched_index, returned_instance = search_book_list(master_book_list, 44890081, search_field='ID')
+
+    # urlNum = [1]  # some harry potter book
+    # urlNum = [20518872]  # The Three Body Problem
+    # urlNum = [186074]  # The Name of the Wind
+    # # urlNum = [13569581] #Blood Song
+    # urlNum = [14891]  # A Tree Grows in Brooklyn (Belindas fav)
+    # urlNum = [28077464] #Night school (gma fav)
+    # urlNum = [61535] #Selfish gene (sunbins fav)
+    # urlNum = [13376] #The House of scorpion (Kim's fav)
+    searched_index, returned_instance = search_book_list(master_book_list, 186074, search_field='ID') # Name of the wind
+    a = returned_instance.title
+    searched_index, returned_instance = search_book_list(master_book_list, a,
+                                                         search_field='title')
+
+    searched_index, returned_instance = search_book_list(master_book_list, 20518872, search_field='ID')  # The Three Body Problem
+    a = returned_instance.title
+    searched_index, returned_instance = search_book_list(master_book_list, a,
+                                                         search_field='title')
+
+    searched_index, returned_instance = search_book_list(master_book_list, 13569581, search_field='ID')  # Blood Song
+    a = returned_instance.title
+    searched_index, returned_instance = search_book_list(master_book_list, a,
+                                                         search_field='title')
+
+    searched_index, returned_instance = search_book_list(master_book_list, 14891, search_field='ID')  # A Tree Grows in Brooklyn (Belindas fav)
+    a = returned_instance.title
+    searched_index, returned_instance = search_book_list(master_book_list, a,
+                                                         search_field='title')
+
+    # searched_index, returned_instance = search_book_list(master_book_list, 61535, search_field='ID')  # Selfish gene
 
 
