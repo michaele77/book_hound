@@ -21,7 +21,8 @@ import os
 import pickle
 from collections import Counter
 import numpy as np
-
+import datetime
+import sys
 
 
 #-----------------------------------------------------------------------------#
@@ -30,7 +31,8 @@ import numpy as np
 
 directory_list = os.listdir('scraped_data/')
 try:
-    directory_list.pop('.DS_Store')
+    print('Removed DS_Store')
+    directory_list.remove('.DS_Store')
 except:
     print('No DS_store to pop (thankfully)')
 
@@ -230,8 +232,10 @@ if __name__ == "__main__":
     master_user_list = []
     master_book_list = []
 
+
     for curr_pickle in directory_list:
         with open('scraped_data/' + curr_pickle, 'rb') as f:  # Python 3: open(..., 'rb')
+            print('loaded {0}'.format(curr_pickle))
             unpacked_user, unpacked_book = pickle.load(f)
 
             master_user_list = master_user_list + unpacked_user
@@ -289,12 +293,20 @@ if __name__ == "__main__":
             repeated_books_list.append(instance_list)
             repeated_books_indx.append(temp_indices)
 
-        if i % 100 == 0:
-            print(i)
+        print(str(i) + ' / ' + str(len(master_book_IDs)))
+        # if i % 100 == 0:
+        #     print(i)
 
     consolidate_book_list(master_book_list, master_book_IDs, repeated_books_list, repeated_books_indx)
 
+    # save these networks
+    sys.setrecursionlimit(100000)
+    currTime = str( datetime.datetime.now() )
+    with open('master_checkpoints/masterLists_' + currTime +'.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump([master_book_list, master_user_list, master_book_IDs, master_user_IDs], f)
 
+
+    # Note: Max pickle size is 155MB...
 
 
 

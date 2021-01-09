@@ -62,6 +62,7 @@ import sys
 import copy
 import concurrent.futures
 import threading
+import os
 
 # Do custom function imports
 from config import get_scraper_API_KEY
@@ -110,6 +111,8 @@ star_assignment['it was ok']        = 2
 star_assignment['did not like it']  = 1
 
 
+# Normally, before I ran into weird ass pages, I would have ~80 users with ~120 max books per
+# Let's aim for about the same number of users (doing 120 currently) with same book count
 searchParam_max_rating_pages = 4
 searchParam_max_users = 4
 
@@ -147,12 +150,14 @@ def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
 
     continueFlag = True
     pageIter = 1
+    rated_book_number_ticker = 0 # we're aiming for this number
     ratingsListFnc = []
     ratingsList = None
     ratingsScore_AVG = None
     ratingsScore_OWN_temp = None
 
     page_limit = searchParam_max_rating_pages ##Automatically stops if more than 5 pages
+    ratings_page_lim = searchParam_max_rating_pages * 30 # Should be 120
     star_limit = 3 ##Automatically stops once 3 or less stars encountered TODO: what if NONE is encountered?
 
     while continueFlag:
@@ -218,7 +223,8 @@ def get_page_inf_scroll(fnc_url_link, curr_thread, scroll_num=20):
             continueFlag = False
             #Note, this count counts the base page as 1 page...so only 1 extra page --> 2 total pages
 
-        elif pageIter >= page_limit:
+        # elif pageIter >= page_limit:
+        elif len(ratingsList) >= ratings_page_lim:
             print('We have hit the set page limit! final page count: {}'.format(pageIter))
             continueFlag = False
             # Note, this count counts the base page as 1 page...so only 1 extra page --> 2 total pages
@@ -293,7 +299,14 @@ def extract_img(img_src_str):
     return out
 
 def save_img_file(book_dict, inBits):
-    file = open('cover_photos/' + book_dict['title'] + '_' + str(book_dict['ID']) + '.jpg', 'wb')
+    try:
+        file = open('cover_photos/' + book_dict['title'] + '_' + str(book_dict['ID']) + '.jpg', 'wb')
+    except:
+        # We're here if the title contains a '/', which confuses the directory os...lol
+        # Replace it with a dash
+        new_str = book_dict['title'].replace('/', '-')
+        file = open('cover_photos/' + new_str + '_' + str(book_dict['ID']) + '.jpg', 'wb')
+
     file.write(inBits)
     file.close()
 
@@ -306,8 +319,15 @@ def get_genre_list(book_info):
     element_list = soup.select('.elementList')
     element_list.pop(0) # Clear out the first garbage entree
 
+    try:
+        temp_x = element_list[0].contents[3].contents[1].contents[0]
+    except:
+        print('First element is garbage (again)')
+        element_list.pop(0)
+
+
     output_list = []
-    for curr_element in element_list:
+    for trackerI, curr_element in enumerate(element_list):
         temp_content = curr_element.contents
 
         # Do the user count first, it's easiest
@@ -425,7 +445,16 @@ def review_collection_thread_function(thread_num):
 
 
 
+def extract_id_from_info(curr_info):
 
+    # Need a try case here to account for the "small reviews" that pop up, have a slightly different structure
+    try:
+        href_string = curr_info.contents[3].contents[1].attrs['href']
+    except:
+        print('Encountered small review')
+        href_string = curr_info.contents[1].contents[1].attrs['href']
+    ID_string = href_string.split('/')[-1].split('-')[0]
+    return int(ID_string)
 
 
 
@@ -435,6 +464,29 @@ def review_collection_thread_function(thread_num):
 
 ## Time to loop through out book_list.txt file!
 ## Note: any book_list.txt reading or modification will be through functions imported in collect_books.py
+
+## Load in a hollistic list of IDs
+
+directory_list = os.listdir('scraped_data/')
+try:
+    print('Removed DS_Store')
+    directory_list.remove('.DS_Store')
+except:
+    print('No DS_store to pop (thankfully)')
+
+master_user_list = []
+
+for curr_pickle in directory_list:
+    with open('scraped_data/' + curr_pickle, 'rb') as f:  # Python 3: open(..., 'rb')
+        print('loaded {0}'.format(curr_pickle))
+        unpacked_user, unpacked_book = pickle.load(f)
+
+        master_user_list = master_user_list + unpacked_user
+
+master_user_IDs = [i.ID for i in master_user_list] # Use this ID check to throw off any users that appear again
+# This should solve the 'power user' problem where a few people dominate resources
+# Should lead to larger collection of books and higher user effeciency (and book effeciency too probably)
+
 
 
 # loop until it is broken by a returned ERRORCODE
@@ -491,8 +543,14 @@ while True:
         time.sleep(2)
 
     #Append however many user pages we want to go through!
-    user_page_num = searchParam_max_users
-    for cnt_i in range(user_page_num):
+    # user_page_num = searchParam_max_users
+    users_to_finish = searchParam_max_users*30 # should be 120 here
+    user_counter_tick = 0
+    # for cnt_i in range(user_page_num):
+
+
+    user_pages = 0
+    while len(book_info['reviewers']) < users_to_finish and user_pages < 10:
         #instead of grabbing href link from the parsed XML, use a selenium click
         #won't work otherwise (since it uses a JSON request to get the next page)
         time.sleep(2)  # to avoid the random-length HTML garbage anti-attack mechanism
@@ -502,8 +560,13 @@ while True:
         try:
             element.click()
         except:
-            print('entered button click intercepted error...trying a bandaid...')
-            driver.execute_script("arguments[0].click();", element)
+            try:
+                print('entered button click intercepted error...trying a bandaid...')
+                driver.execute_script("arguments[0].click();", element)
+            except:
+                time.sleep(4)
+                print('Trying again after sleep')
+                driver.execute_script("arguments[0].click();", element)
 
         curr_page_soup = BeautifulSoup(driver.page_source, 'lxml')
         curr_page_reviews = list(curr_page_soup.select('.user'))
@@ -517,6 +580,7 @@ while True:
         # By default, include these no stars as 4
         info_list = list(curr_page_soup.select('.reviewHeader.uitext.stacked'))
         reviewer_stars = []
+        extracted_IDs = []
         for iii, curr_user_info in enumerate(info_list):
             try:
                 temp_str = curr_user_info.contents[5]['title']
@@ -524,6 +588,7 @@ while True:
                 print('Found a no-star reviewer! Lets add them (index {0})'.format(iii))
                 temp_str = 'really liked it' # fake a 4 star rating!
             reviewer_stars.append(temp_str)
+            extracted_IDs.append( extract_id_from_info(curr_user_info) )
 
 
         kickoff_list = []
@@ -532,8 +597,13 @@ while True:
             if star_num <= 3:
                 # If the review was not good, skip this person
                 # Add to a "kick off" list first so that a pop error doesnt occur
-                print('POP off person {0}'.format(iterI))
+                print('LOW STARS POP off: person {0}'.format(iterI))
                 kickoff_list.append(iterI)
+            elif extracted_IDs[iterI] in master_user_IDs:
+                # Otherwise, if the reviewer has high stars but has been recorded before, skip them too!
+                print('REPEATED USER POP off: person {0}'.format(iterI))
+                kickoff_list.append(iterI)
+
 
         # Now proceed to actually pop these people
         for index in sorted(kickoff_list, reverse=True):
@@ -541,6 +611,8 @@ while True:
 
 
         book_info['reviewers'] = book_info['reviewers'] + curr_page_reviews
+        print('At {0} user number, {1} page number'.format(len(book_info['reviewers']), user_pages))
+        user_pages += 1
 
 
 
@@ -555,8 +627,8 @@ while True:
 
 
     ## Spin up the threads!
-    with concurrent.futures.ThreadPoolExecutor(max_workers=5) as executor:
-        executor.map(review_collection_thread_function, range(5))
+    with concurrent.futures.ThreadPoolExecutor(max_workers=10) as executor:
+        executor.map(review_collection_thread_function, range(10))
 
 
 ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -676,11 +748,26 @@ while True:
 
     sys.setrecursionlimit(100000)
     location_to_pickle = 'scraped_data/' + str(book_info['title']) + '_' + str(book_info['ID']) + '.pkl'
-    with open(location_to_pickle, 'wb') as f:  # Python 3: open(..., 'wb')
-        pickle.dump([covered_users, covered_books], f)
+    try:
+        with open(location_to_pickle, 'wb') as f:  # Python 3: open(..., 'wb')
+            pickle.dump([covered_users, covered_books], f)
+    except:
+        # if we're here, book_title has '/' in the string, confusing it
+        # replace with a dash
+        print('saving with a dash...')
+        new_str = book_info['title'].replace('/', '-')
+        location_to_pickle = 'scraped_data/' + new_str + '_' + str(book_info['ID']) + '.pkl'
+        with open(location_to_pickle, 'wb') as f:  # Python 3: open(..., 'wb')
+            pickle.dump([covered_users, covered_books], f)
+
 
 
     mark_line_as_finished(scrape_ref_idx)
+
+    # Finally, add to the pickled list
+    temp_IDs = [bb.ID for bb in covered_users]
+    master_user_IDs = master_user_IDs + temp_IDs
+
 
 ## STATS on DEC/31/2020:
 ## Starting from 0 books collected, initiating run on 2:50PM
