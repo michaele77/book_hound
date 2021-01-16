@@ -23,6 +23,7 @@ from collections import Counter
 import numpy as np
 import datetime
 import sys
+import gc
 
 
 #-----------------------------------------------------------------------------#
@@ -31,8 +32,8 @@ import sys
 
 directory_list = os.listdir('scraped_data/')
 try:
-    print('Removed DS_Store')
     directory_list.remove('.DS_Store')
+    print('Removed DS_Store')
 except:
     print('No DS_store to pop (thankfully)')
 
@@ -112,7 +113,12 @@ def consolidate_book_list(fnc_master_list, fnc_id_list, fnc_book_inst, fnc_book_
     indx_to_pop = []
     # For each repeated book, update one master node, and pop the rest from the master list
     # Master shall be the book with full params, index 0 otherwise
-    for i in range(len(fnc_book_inst)):
+    lenN = len(fnc_book_inst)
+    for i in range(lenN):
+
+        if i % 10:
+            print('Consolidation book iteration: {0} / {1}'.format(i, lenN))
+
         has_master_flag = False
 
         curr_book_list = fnc_book_inst[i]
@@ -232,14 +238,26 @@ if __name__ == "__main__":
     master_user_list = []
     master_book_list = []
 
+    gc.disable()
 
     for curr_pickle in directory_list:
+
         with open('scraped_data/' + curr_pickle, 'rb') as f:  # Python 3: open(..., 'rb')
             print('loaded {0}'.format(curr_pickle))
             unpacked_user, unpacked_book = pickle.load(f)
 
-            master_user_list = master_user_list + unpacked_user
-            master_book_list = master_book_list + unpacked_book
+        master_user_list = master_user_list + unpacked_user
+        master_book_list = master_book_list + unpacked_book
+
+    gc.enable()
+
+
+
+    # Report  collected number
+    print()
+    print('We have collected the following number of nodes:')
+    print('{0} users'.format(len(master_user_list)))
+    print('{0} books'.format(len(master_book_list)))
 
 
     # Now that we have everything appended, let's see how many repeats we have
@@ -259,6 +277,8 @@ if __name__ == "__main__":
 
     # Now let's sort through the users first
 
+    print()
+    print('Initiating User List')
     # Get a list of lists. Each entree is a list of the repeated user instances
     repeated_users_list = []
     repeated_indx = []
@@ -272,18 +292,101 @@ if __name__ == "__main__":
             repeated_indx.append(temp_indices)
 
     x = 7
+    print('Finished User List')
 
     # Now consolidate user lists
     consolidate_user_list(master_user_list, master_user_IDs, repeated_users_list, repeated_indx)
 
+    # First, save the user network
+    sys.setrecursionlimit(100000)
+    currTime = str(datetime.datetime.now())
+    with open('master_checkpoints/masterUserList_' + currTime + '.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump([master_user_list, master_user_IDs], f)
+
+
+
+    # Before we start on the book list, let's get the checkpoints that we've gone through already!
+    checkpoints_names_list = os.listdir('master_checkpoints/')
+    checkpoints_skip_iter = 0
+    repeated_books_list = []
+    repeated_books_indx = []
+    place_to_start = 0
+
+    for currCount, curr_checkName in enumerate(checkpoints_names_list):
+        print()
+        print()
+        print('Current for loop count: {0}'.format(currCount))
+        if 'masterBookLists' in curr_checkName:
+            # We have a checkpoint!
+            maxSplitNum = int(curr_checkName.split('-')[-1].split('.')[0]) # this should extract second number for checkpoints marker
+            temp_i = int(curr_checkName.split('~')[-1].split('_')[0]) #should extract i, which is after the tilda
+            print('At i value of {0}'.format(temp_i))
+            if maxSplitNum > checkpoints_skip_iter:
+                checkpoints_skip_iter = maxSplitNum
+                print('New checkpoints skip num is {0}'.format(checkpoints_skip_iter))
+
+            if temp_i > place_to_start:
+                place_to_start = temp_i
+                print('New place to start is {0}'.format(place_to_start))
+
+            print('load starting')
+            gc.disable()
+            print('will attempt to load from {0}'.format(curr_checkName))
+            try:
+                with open('master_checkpoints/' + curr_checkName, 'rb')  as f:  # Python 3: open(..., 'rb')
+                    temp_bookList, temp_bookIndx = pickle.load(f)
+            except:
+                print('Ran out of input')
+                temp_bookList = []
+                temp_bookIndx = []
+            gc.enable()
+            print('load done')
+
+            # if len(repeated_books_list) + len(temp_bookList) > inf:
+            if False: # disabable this feature
+                print()
+                print('STOPPING LOAD SEQUENCE EARLY TO AVOID MEMORY LEAK')
+                indx_to_stopAt = 100000 - len(repeated_books_list)
+                repeated_books_list = repeated_books_list + temp_bookList[0:indx_to_stopAt]
+                repeated_books_indx = repeated_books_indx + temp_bookIndx[0:indx_to_stopAt]
+                break
+            else:
+                repeated_books_list = repeated_books_list + temp_bookList
+                repeated_books_indx = repeated_books_indx + temp_bookIndx
+                print('We have just loaded in {0}'.format(curr_checkName))
+
+            print('At repeated books length of {0}'.format(len(repeated_books_list)))
+
+
+
+    # NOTE: for now...we don't actually have the skip number...so just assign it as based on what we know
+    # TODO: write code to extract place_to_start from the tilda expression in the new checkpoints!
+    # place_to_start = 20000
 
 
 
     # Get a list of lists. Each entree is a list of the repeated user instances
-    repeated_books_list = []
-    repeated_books_indx = []
+    # repeated_books_list = []
+    # repeated_books_indx = []
     id_counts = list(c_books.values())
+
+    save_period = 100000
+    update_period = 100
+    prevSave = 0
+    if not repeated_books_list:
+        repet_iter = 0
+    else:
+        repet_iter = len(repeated_books_list)
+        prevSave = checkpoints_skip_iter
+        print('Setting repet_iter to {0}'.format(repet_iter))
     for i, curr_book_id in enumerate(list(c_books.keys())):
+
+        if i < place_to_start:
+            # If we have checkpoints done already and want to not redo work, let's skip!
+            print(str(i) + ' / ' + str(len(master_book_IDs)) + ' (skipping...)')
+            # repet_iter = checkpoints_skip_iter # make sure the repet_iter is correct!
+            continue
+
         if id_counts[i] > 1:
             ins_list_temp = [xx for xx,vvv in enumerate(master_book_list) if vvv.ID == curr_book_id]
             this_title = master_book_list[ins_list_temp[0]].title #Doesn't matter which one, they're identical
@@ -292,12 +395,60 @@ if __name__ == "__main__":
 
             repeated_books_list.append(instance_list)
             repeated_books_indx.append(temp_indices)
+            repet_iter += 1
+
+        if i % update_period == 0 and i is not 0:
+            # just a slot to update/report on parameters more frequently than our save period!
+            print('Repition iteration counter is {0}'.format(repet_iter))
+
+
+        if i % save_period == 0 and i is not 0:
+            # Save about every ~2 hours
+            # Repeated_book_xxx should only be as long as the unique book key list is
+            # Therefore, we can simply do index-based saving to save the most recent list
+
+            booksList_toSave = repeated_books_list[prevSave:repet_iter]
+            booksIndx_toSave = repeated_books_indx[prevSave:repet_iter]
+
+            sys.setrecursionlimit(100000)
+            # Note: first 2 checkpoints did not have the squigly tilda
+            # This will just make processing the actual count i easier in the future
+            with open('master_checkpoints/masterBookLists_CUT~' + str(i) + '_' + str(prevSave) + '-' + str(repet_iter) +
+                      '.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+                pickle.dump([booksList_toSave, booksIndx_toSave], f)
+
+            prevSave = repet_iter
+
 
         print(str(i) + ' / ' + str(len(master_book_IDs)))
         # if i % 100 == 0:
         #     print(i)
 
+    # Once we're out of the loop, make sure to save the last bit!
+    booksList_toSave = repeated_books_list[prevSave:repet_iter]
+    booksIndx_toSave = repeated_books_indx[prevSave:repet_iter]
+
+    sys.setrecursionlimit(100000)
+    # Note: first 2 checkpoints did not have the squigly tilda
+    # This will just make processing the actual count i easier in the future
+    with open('master_checkpoints/masterBookLists_CUT~' + str(i) + '_' + str(prevSave) + '-' + str(repet_iter) +
+              '.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        pickle.dump([booksList_toSave, booksIndx_toSave], f)
+
+    prevSave = repet_iter
+
+    print()
+    print('Finished getting all of the repeat lists')
+    print()
+    print()
+
+    # Note: The current consolidate book function was written with the assumption that the book nodes were common objects
+    # TODO: will need to modify the consolidate_book_list to account for the same book/user node being seperated in multiple addresses
+    # Solution: use the ID or the name to unify them (similar to how we're currently doing it)
+    print()
+    print('Initiating book consolidation algo')
     consolidate_book_list(master_book_list, master_book_IDs, repeated_books_list, repeated_books_indx)
+    print('Book consolidation finished')
 
     # save these networks
     sys.setrecursionlimit(100000)
@@ -329,7 +480,7 @@ if __name__ == "__main__":
     # Now we have a condensed master and user list, this is distilled gold!
     # Now we can do fun things like search our master lists based on things like 'book title'
 
-    searched_index, returned_instance = search_book_list(master_book_list, 'Anxious People' , search_field = 'title')
+    searched_index, returned_inxstance = search_book_list(master_book_list, 'Anxious People' , search_field = 'title')
     searched_index, returned_instance = search_book_list(master_book_list, 'My Dark Vanessa', search_field='title')
 
     searched_index, returned_instance = search_book_list(master_book_list, 44890081, search_field='ID')
