@@ -8,6 +8,7 @@ import sys
 import sqlite3
 import pickle
 from collections import Counter
+import time
 
 
 #-----------------------------------------------------------------------------#
@@ -75,6 +76,7 @@ if __name__ == "__main__":
     if int(user_in) == 1:
 
         ## Load in pickled data
+        startTime = time.time()
 
         sys.setrecursionlimit(100000)
         file_str = 'masterUserList_ref.pkl'
@@ -173,6 +175,9 @@ if __name__ == "__main__":
                     cur_user = tuple_user[0]
 
                     ## do the master_book appending here to avoid N^2 runtime above
+                    ## First, check that the user is not already in the master book raters
+                    if tuple_user in master_book.raters:
+                        continue
                     master_book.raters.append(tuple_user)
                     master_book.raters_ID.append(cur_node.raters_ID[indx])
 
@@ -192,31 +197,131 @@ if __name__ == "__main__":
 
         print('Done with distilling trackers!')
 
-        sys.setrecursionlimit(100000)
-        with open('master_checkpoints/masterLists_prototype.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-            pickle.dump([master_consolidated_book_list, master_user_list, master_consolidated_book_IDs, master_user_IDs], f)
+        # sys.setrecursionlimit(100000)
+        # with open('master_checkpoints/masterLists_prototype.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        #     pickle.dump([master_consolidated_book_list, master_user_list, master_consolidated_book_IDs, master_user_IDs], f)
 
 
     else:
-        sys.setrecursionlimit(100000)
-        with open('master_checkpoints/masterLists_prototype.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
-            master_consolidated_book_list, master_user_list, master_consolidated_book_IDs, master_user_IDs = pickle.load(f)
+        pass
+        # sys.setrecursionlimit(100000)
+        # with open('master_checkpoints/masterLists_prototype.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+        #     master_consolidated_book_list, master_user_list, master_consolidated_book_IDs, master_user_IDs = pickle.load(f)
+
+
+
 
 
     print('finished loading data')
+    print('Loading time is {0} minute'.format((time.time()-startTime)/60))
+    print('next')
+    
 
 
 
-    conn = sqlite3.connect('test.db')
+
+
+
+
+
+
+
+    conn = sqlite3.connect('bookhound_test_2.db')
     c = conn.cursor()
 
+    ## Test creating the book and user table
+
+    # Create RatUser tables
+    rattable_fk_num = 2
+    ratusr_users_string = 'CREATE TABLE ratusr_users (ID int, '
+    suffix = ')'
+    for i in range(rattable_fk_num):
+        temp_str = 'fk_user_{0} int FOREIGN KEY REFERENCES users(fk_user_{0}),'.format(i)
+        ratusr_users_string += temp_str
+
+    ratusr_users_string = ratusr_users_string[0:-1] + suffix
+
     try:
-        c.execute("""CREATE TABLE employees (
+        c.execute(ratusr_users_string)
+    except:
+        print("error occured!")
+
+    try:
+        c.execute("""CREATE TABLE books (
+                    ID int,
+                    title varchar,
+                    href varchar,
+                    PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
+                    fk_raters int FOREIGN KEY REFERENCES
+                    raters enum,
+                    raters_rating enum,
+                    raters_id enum
+                    )""")
+    except:
+        print('error occured!')
+
+
+    # Book table
+    try:
+        c.execute("""CREATE TABLE books (
+                    ID int,
+                    title varchar,
+                    href varchar,
+                    PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
+                    fk_raters int FOREIGN KEY REFERENCES
+                    raters enum,
+                    raters_rating enum,
+                    raters_id enum
+                    )""")
+    except:
+        print('error occured!')
+
+    # User table
+    try:
+        c.execute("""CREATE TABLE users (
+                    ID int,
+                    name varchar,
+                    link varchar,
+                    ratings_link varchar,
+                    books enum,
+                    books_rating enum,
+                    books_id
+                    )""")
+    except:
+        print('error occured!')
+
+    # Let's insert 2 books and 2 users
+    # Have 1 user point to only 1 book, while secnd user points to both
+    ID = 1
+    name = 'johny ive'
+    link = 'whatsgood.com'
+    ratings_link = 'myratings.com'
+
+    c.execute("INSERT INTO users VALUES (?, ?, ?)", (0, bb, cc))
+
+
+
+
+    c.execute("SELECT * FROM employees WHERE  first = 'john'")
+
+    var = c.fetchall()
+    print(var)
+
+
+    ## Reference code below!
+    ## COMMENT OUT LATER!!
+    # User table
+    # ss = 'CREATE TABLE newtable (' + 'first text,' + 'last text,' + 'pay integer)'
+    try:
+        c.execute("""CREATE TABLE newtable_4 (
                     first text,
                     last text,
-                    pay integer)""")
+                    pay integer,
+                    PersonID int,
+                    FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))""")
     except:
-        pass
+        print('ERROR!')
+
 
     c.execute("INSERT INTO employees VALUES ('Michael', 'Ershov', 6969696)")
     c.execute("SELECT * FROM employees WHERE  last = 'Ershov'")
