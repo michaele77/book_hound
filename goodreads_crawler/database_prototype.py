@@ -97,7 +97,8 @@ def create_base_tables():
                     image_binary varbinary,
                     full_params bool,
                     
-                    fk_users int
+                    fk_users varchar,
+                    fk_genres int
                     )""")
         print('Books Success')
     except sqlite3.Error as er:
@@ -115,13 +116,13 @@ def create_base_tables():
     #     temp_str = 'fk_user_{0} int,'.format(i)
     #     ratusr_users_string += temp_str
     # ratusr_users_string = ratusr_users_string[0:-1] + ')'
-
-    try:
-        c.execute(ratusr_users_string)
-        print('RatUSR_users Success')
-    except sqlite3.Error as er:
-        print('error occured on RatUSR_users table!')
-        print_error(er)
+    #
+    # try:
+    #     c.execute(ratusr_users_string)
+    #     print('RatUSR_users Success')
+    # except sqlite3.Error as er:
+    #     print('error occured on RatUSR_users table!')
+    #     print_error(er)
 
 
     ## Create RatBOOK_books table
@@ -139,27 +140,76 @@ def create_base_tables():
         print('error occured on RatBOOK_books table!')
         print_error(er)
 
+# def add_fk_columns():
+#     addColumn = 'ALTER TABLE Users ADD COLUMN fk_books int;'
+#     # addFK = 'ALTER TABLE Users ADD FOREIGN KEY (fk_books) REFERENCES RatBOOK_books(fk_books);'
+#     try:
+#         c.execute(addColumn)
+#         print('Users add column Success')
+#     except:
+#         print('error occured on altering users for add column!')
+#     # try:
+#     #     c.execute(addFK)
+#     #     print('Users add FK Success')
+#     # except:
+#     #     print('error occured on altering users for add FK!')
 
-def add_extra_columns():
-    pass
 
-def add_fk_columns():
-    addColumn = 'ALTER TABLE Users ADD COLUMN fk_books int;'
-    # addFK = 'ALTER TABLE Users ADD FOREIGN KEY (fk_books) REFERENCES RatBOOK_books(fk_books);'
+
+
+####### SQL HELPER FUNCTIONS!!!!#######
+
+
+## Helper function to add a single node to the books table
+def SQL_add_book_node(book_node):
+    ## Have the following structure:
+    ## 1) ID 2) title 3) href 4) author 5) meta
+    ## 6) details 7) series 8) summary 9) image_source
+    ## 10) image_binary 11) full_params bool 12) fk_users 13) fk_genres
+    ID          = book_node.ID
+    title       = book_node.title
+    href        = book_node.href
+    author      = book_node.author
+    meta        = book_node.meta
+    details     = book_node.details
+    series      = book_node.series
+    summary     = book_node.summary
+    im_src      = book_node.imageSource
+    im_bin      = book_node.imageBinary
+    full_param  = book_node.has_full_params
+    fk_users    = 'book_link_' + str(ID)
+    fk_genres   = ID ## Should this be something else??
+
     try:
-        c.execute(addColumn)
-        print('Users add column Success')
-    except:
-        print('error occured on altering users for add column!')
-    # try:
-    #     c.execute(addFK)
-    #     print('Users add FK Success')
-    # except:
-    #     print('error occured on altering users for add FK!')
+        c.execute("INSERT INTO books VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              (ID, title, href, author, meta, details, series, summary, im_src, im_bin, full_param, fk_users, fk_genres ))
+        print("Success adding: {0}".format(title))
+    except sqlite3.Error as er:
+        print('error occured on adding {0}!'.format(title))
+        print_error(er)
 
 
+## Helper function to return boolean of whether the input ID is in the given table
+def is_ID_in_table(table_name, input_ID):
+    # exec_str = "SELECT CASE WHEN EXISTS (SELECT TOP 1 *\
+    #                      FROM {0} \
+    #                      WHERE ID = {1}) \
+    #         THEN CAST (1 AS BIT) \
+    #         ELSE CAST (0 AS BIT) END ".format(table_name, input_ID)
+
+    exec_str = "SELECT * FROM {0} WHERE  ID = {1}".format(table_name, input_ID)
 
 
+    try:
+        c.execute(exec_str)
+        found_element = c.fetchall()
+        if not found_element:
+            print("Search completed, ID {0} not found in {1}".format(input_ID, table_name))
+        else:
+            return found_element
+    except sqlite3.Error as er:
+        print('error occured on finding {0} in {1}!'.format(input_ID, table_name))
+        print_error(er)
 
 
 
@@ -327,7 +377,7 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_test_20.db')
+    conn = sqlite3.connect('bookhound_test_25.db')
     c = conn.cursor()
 
     ## Test creating the book and user table
@@ -336,152 +386,195 @@ if __name__ == "__main__":
     ## This is Books, Users, RatUSR_users, RatBOOK_users
     create_base_tables()
 
-    ## Now update tables with foreign keys to each other
-    ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
-    #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
-    add_fk_columns() # Then add the FOREIGN KEY stuff
+    # ## Now update tables with foreign keys to each other
+    # ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
+    # #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
+    # add_fk_columns() # Then add the FOREIGN KEY stuff
 
 
 
 
 
-    # Create RatUser tables
-    rattable_fk_num = 9000
-    ratusr_users_string = 'CREATE TABLE ratusr_users (ID int, '
-    for i in range(rattable_fk_num):
-        temp_str = 'fk_user_{0} int,'.format(i)
-        ratusr_users_string += temp_str
+    ## Let's start iterating through our master_consolidated_book_list
+    ## Add book to a book node, add it's users tp a user node, and create a table linking the book with the users
+    for this_book in master_consolidated_book_list:
+        print("Book title: {0}".format(this_book.title))
 
-    # temp_str = 'PRIMARY KEY (ID),'
-    # ratusr_users_string += temp_str
+        SQL_add_book_node(this_book)
 
-    #FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))
-    for i in range(rattable_fk_num):
-        temp_str = 'FOREIGN KEY (fk_user_{0}) REFERENCES Users(fk_user_{0}),'.format(i)
-        ratusr_users_string += temp_str
+        raters_for_book = [i[0] for i in this_book.raters]
+        user_2_book_rating = [i[1] for i in this_book.raters]
 
-    ratusr_users_string = ratusr_users_string[0:-1] + ')'
-
-    try:
-        c.execute("""CREATE TABLE Users (
-                    ID int,
-                    name varchar,
-                    link varchar,
-                    ratings_link varchar,
-                    books enum,
-                    books_rating enum,
-                    books_id
-                    )""")
-    except:
-        print('error occured!')
-
-    try:
-        c.execute(ratusr_users_string)
-    except:
-        print("error occured!")
-
-    try:
-        c.execute("""CREATE TABLE books (
-                    ID int,
-                    title varchar,
-                    href varchar,
-                    PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
-                    fk_raters int FOREIGN KEY REFERENCES
-                    raters enum,
-                    raters_rating enum,
-                    raters_id enum
-                    )""")
-    except:
-        print('error occured!')
+        ## We have a list of raters for the book and a list for their corresponding ratings to this book
+        ## Call a function to add each of these nodes
+        ## Then create a new linker table for this book
+        SQL_add_user_node_list(raters_for_book)
 
 
-    # Book table
-    try:
-        c.execute("""CREATE TABLE books (
-                    ID int,
-                    title varchar,
-                    href varchar,
-                    PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
-                    fk_raters int FOREIGN KEY REFERENCES
-                    raters enum,
-                    raters_rating enum,
-                    raters_id enum
-                    )""")
-    except:
-        print('error occured!')
+    ## Double check some stuff...
+    print( is_ID_in_table('books', 9732202) ) ## Should output the affirmation
 
-    # User table
-    try:
-        c.execute("""CREATE TABLE users (
-                    ID int,
-                    name varchar,
-                    link varchar,
-                    ratings_link varchar,
-                    books enum,
-                    books_rating enum,
-                    books_id
-                    )""")
-    except:
-        print('error occured!')
-
-    # Let's insert 2 books and 2 users
-    # Have 1 user point to only 1 book, while secnd user points to both
-    ID = 1
-    name = 'johny ive'
-    link = 'whatsgood.com'
-    ratings_link = 'myratings.com'
-
-    c.execute("INSERT INTO users VALUES (?, ?, ?)", (0, bb, cc))
+    c.execute("SELECT * FROM books")
+    print(c.fetchall()) ## Prints the execution statement above
 
 
 
 
-    c.execute("SELECT * FROM employees WHERE  first = 'john'")
-
-    var = c.fetchall()
-    print(var)
 
 
-    ## Reference code below!
-    ## COMMENT OUT LATER!!
-    # User table
-    # ss = 'CREATE TABLE newtable (' + 'first text,' + 'last text,' + 'pay integer)'
-    try:
-        c.execute("""CREATE TABLE newtable_4 (
-                    first text,
-                    last text,
-                    pay integer,
-                    PersonID int,
-                    FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))""")
-    except:
-        print('ERROR!')
 
-
-    c.execute("INSERT INTO employees VALUES ('Michael', 'Ershov', 6969696)")
-    c.execute("SELECT * FROM employees WHERE  last = 'Ershov'")
-
-    var = c.fetchall()
-    print(var)
-
-    aa = 'deez'
-    bb = 'nuts'
-    cc = 420
-    c.execute("INSERT INTO employees VALUES (?, ?, ?)", (aa,bb,cc))
-
-    c.execute("SELECT * FROM employees WHERE  pay = 420")
-
-    aa = 'john'
-    bb = 'wick'
-    cc = 1000000000
-    c.execute("INSERT INTO employees VALUES (:first, :last, :pay)", {'first': aa, 'last': bb, 'pay': cc})
-
-    c.execute("SELECT * FROM employees WHERE  first = 'john'")
-
-    var = c.fetchall()
-    print(var)
 
 
 
     conn.commit()
 
     conn.close()
+
+
+
+
+    #################################
+    #### BELOW IS DEAD ZONE!!!! #####
+    #################################
+
+    #
+    # # Create RatUser tables
+    # rattable_fk_num = 9000
+    # ratusr_users_string = 'CREATE TABLE ratusr_users (ID int, '
+    # for i in range(rattable_fk_num):
+    #     temp_str = 'fk_user_{0} int,'.format(i)
+    #     ratusr_users_string += temp_str
+    #
+    # # temp_str = 'PRIMARY KEY (ID),'
+    # # ratusr_users_string += temp_str
+    #
+    # #FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))
+    # for i in range(rattable_fk_num):
+    #     temp_str = 'FOREIGN KEY (fk_user_{0}) REFERENCES Users(fk_user_{0}),'.format(i)
+    #     ratusr_users_string += temp_str
+    #
+    # ratusr_users_string = ratusr_users_string[0:-1] + ')'
+    #
+    # try:
+    #     c.execute("""CREATE TABLE Users (
+    #                 ID int,
+    #                 name varchar,
+    #                 link varchar,
+    #                 ratings_link varchar,
+    #                 books enum,
+    #                 books_rating enum,
+    #                 books_id
+    #                 )""")
+    # except:
+    #     print('error occured!')
+    #
+    # try:
+    #     c.execute(ratusr_users_string)
+    # except:
+    #     print("error occured!")
+    #
+    # try:
+    #     c.execute("""CREATE TABLE books (
+    #                 ID int,
+    #                 title varchar,
+    #                 href varchar,
+    #                 PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
+    #                 fk_raters int FOREIGN KEY REFERENCES
+    #                 raters enum,
+    #                 raters_rating enum,
+    #                 raters_id enum
+    #                 )""")
+    # except:
+    #     print('error occured!')
+    #
+    #
+    # # Book table
+    # try:
+    #     c.execute("""CREATE TABLE books (
+    #                 ID int,
+    #                 title varchar,
+    #                 href varchar,
+    #                 PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
+    #                 fk_raters int FOREIGN KEY REFERENCES
+    #                 raters enum,
+    #                 raters_rating enum,
+    #                 raters_id enum
+    #                 )""")
+    # except:
+    #     print('error occured!')
+    #
+    # # User table
+    # try:
+    #     c.execute("""CREATE TABLE users (
+    #                 ID int,
+    #                 name varchar,
+    #                 link varchar,
+    #                 ratings_link varchar,
+    #                 books enum,
+    #                 books_rating enum,
+    #                 books_id
+    #                 )""")
+    # except:
+    #     print('error occured!')
+    #
+    # # Let's insert 2 books and 2 users
+    # # Have 1 user point to only 1 book, while secnd user points to both
+    # ID = 1
+    # name = 'johny ive'
+    # link = 'whatsgood.com'
+    # ratings_link = 'myratings.com'
+    #
+    # c.execute("INSERT INTO users VALUES (?, ?, ?)", (0, bb, cc))
+    #
+    #
+    #
+    #
+    # c.execute("SELECT * FROM employees WHERE  first = 'john'")
+    #
+    # var = c.fetchall()
+    # print(var)
+    #
+    #
+    # ## Reference code below!
+    # ## COMMENT OUT LATER!!
+    # # User table
+    # # ss = 'CREATE TABLE newtable (' + 'first text,' + 'last text,' + 'pay integer)'
+    # try:
+    #     c.execute("""CREATE TABLE newtable_4 (
+    #                 first text,
+    #                 last text,
+    #                 pay integer,
+    #                 PersonID int,
+    #                 FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))""")
+    # except:
+    #     print('ERROR!')
+    #
+    #
+    # c.execute("INSERT INTO employees VALUES ('Michael', 'Ershov', 6969696)")
+    # c.execute("SELECT * FROM employees WHERE  last = 'Ershov'")
+    #
+    # var = c.fetchall()
+    # print(var)
+    #
+    # aa = 'deez'
+    # bb = 'nuts'
+    # cc = 420
+    # c.execute("INSERT INTO employees VALUES (?, ?, ?)", (aa,bb,cc))
+    #
+    # c.execute("SELECT * FROM employees WHERE  pay = 420")
+    #
+    # aa = 'john'
+    # bb = 'wick'
+    # cc = 1000000000
+    # c.execute("INSERT INTO employees VALUES (:first, :last, :pay)", {'first': aa, 'last': bb, 'pay': cc})
+    #
+    # c.execute("SELECT * FROM employees WHERE  first = 'john'")
+    #
+    # var = c.fetchall()
+    # print(var)
+    #
+    #
+    #
+    # conn.commit()
+    #
+    # conn.close()
