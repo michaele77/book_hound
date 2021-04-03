@@ -56,6 +56,80 @@ def identify_master_book(repeat_list):
 
 
 
+###### SQL Related Functions below #########
+
+def create_base_tables():
+    ## Create Users table
+    try:
+        c.execute("""CREATE TABLE Users (
+                    ID int,
+                    name varchar,
+                    link varchar,
+                    ratings_link varchar
+                    )""")
+        print('Users Success')
+    except:
+        print('error occured on Users table!')
+
+    ## Create Books table
+    try:
+        c.execute("""CREATE TABLE books (
+                    ID int,
+                    title varchar,
+                    href varchar,
+                    author varchar,
+                    meta varchar,
+                    details varchar,
+                    series varchar,
+                    summary varchar,
+                    image_source varchar,
+                    image_binary varbinary,
+                    full_params bool
+                    )""")
+        print('Books Success')
+    except:
+        print('error occured on Books table!')
+
+
+    ## Create RatUSR_users table
+    try:
+        c.execute("""CREATE TABLE RatUSR_users (
+                    ID int
+                    )""")
+        print('RatUSR_users Success')
+    except:
+        print('error occured on RatUSR_users table!')
+
+
+    ## Create RatBOOK_books table
+    try:
+        c.execute("""CREATE TABLE RatBOOK_books (
+                    ID int
+                    )""")
+        print('RatBOOK_books Success')
+    except:
+        print('error occured on RatBOOK_books table!')
+
+
+def add_extra_columns():
+    pass
+
+def add_fk_columns():
+    addColumn = 'ALTER TABLE Users ADD COLUMN fk_books int;'
+    addFK = 'ALTER TABLE Users ADD FOREIGN KEY (fk_books) REFERENCES RatBOOK_books(fk_books);'
+    try:
+        c.execute(addColumn)
+        print('Users add column Success')
+    except:
+        print('error occured on altering users for add column!')
+    try:
+        c.execute(addFK)
+        print('Users add FK Success')
+    except:
+        print('error occured on altering users for add FK!')
+
+
+
 
 
 
@@ -215,31 +289,62 @@ if __name__ == "__main__":
     print('finished loading data')
     print('Loading time is {0} minute'.format((time.time()-startTime)/60))
     print('next')
-    
 
 
 
 
 
+    ##############
+    ## SQL Time ##
+    ##############
 
-
-
-
-
-    conn = sqlite3.connect('bookhound_test_2.db')
+    conn = sqlite3.connect('bookhound_test_12.db')
     c = conn.cursor()
 
     ## Test creating the book and user table
 
+    ## Create the basic tables
+    ## This is Books, Users, RatUSR_users, RatBOOK_users
+    create_base_tables()
+
+    ## Now update tables with foreign keys to each other
+    ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
+    #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
+    add_fk_columns() # Then add the FOREIGN KEY stuff
+
+
+
+
+
     # Create RatUser tables
-    rattable_fk_num = 2
+    rattable_fk_num = 9000
     ratusr_users_string = 'CREATE TABLE ratusr_users (ID int, '
-    suffix = ')'
     for i in range(rattable_fk_num):
-        temp_str = 'fk_user_{0} int FOREIGN KEY REFERENCES users(fk_user_{0}),'.format(i)
+        temp_str = 'fk_user_{0} int,'.format(i)
         ratusr_users_string += temp_str
 
-    ratusr_users_string = ratusr_users_string[0:-1] + suffix
+    # temp_str = 'PRIMARY KEY (ID),'
+    # ratusr_users_string += temp_str
+
+    #FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))
+    for i in range(rattable_fk_num):
+        temp_str = 'FOREIGN KEY (fk_user_{0}) REFERENCES Users(fk_user_{0}),'.format(i)
+        ratusr_users_string += temp_str
+
+    ratusr_users_string = ratusr_users_string[0:-1] + ')'
+
+    try:
+        c.execute("""CREATE TABLE Users (
+                    ID int,
+                    name varchar,
+                    link varchar,
+                    ratings_link varchar,
+                    books enum,
+                    books_rating enum,
+                    books_id
+                    )""")
+    except:
+        print('error occured!')
 
     try:
         c.execute(ratusr_users_string)
