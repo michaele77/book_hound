@@ -9,7 +9,7 @@ import sqlite3
 import pickle
 from collections import Counter
 import time
-
+import traceback
 
 #-----------------------------------------------------------------------------#
 #                               PRE-DEFINES                                   #
@@ -58,6 +58,14 @@ def identify_master_book(repeat_list):
 
 ###### SQL Related Functions below #########
 
+def print_error(er):
+    print('SQLite error: %s' % (' '.join(er.args)))
+    print("Exception class is: ", er.__class__)
+    print('SQLite traceback: ')
+    exc_type, exc_value, exc_tb = sys.exc_info()
+    print(traceback.format_exception(exc_type, exc_value, exc_tb))
+
+
 def create_base_tables():
     ## Create Users table
     try:
@@ -65,11 +73,14 @@ def create_base_tables():
                     ID int,
                     name varchar,
                     link varchar,
-                    ratings_link varchar
+                    ratings_link varchar,
+                    
+                    fk_books int
                     )""")
         print('Users Success')
-    except:
+    except sqlite3.Error as er:
         print('error occured on Users table!')
+        print_error(er)
 
     ## Create Books table
     try:
@@ -84,31 +95,49 @@ def create_base_tables():
                     summary varchar,
                     image_source varchar,
                     image_binary varbinary,
-                    full_params bool
+                    full_params bool,
+                    
+                    fk_users int
                     )""")
         print('Books Success')
-    except:
+    except sqlite3.Error as er:
         print('error occured on Books table!')
+        print_error(er)
+
 
 
     ## Create RatUSR_users table
+    ## Apparently, limit to number of columns per table is 1-2k...Instead, let's make a table per book
+    ## Table will have rows of users that rated a book, columns will be fk to user, user ID, rating, etc
+    # rattable_fk_num = 9000
+    # ratusr_users_string = 'CREATE TABLE RatUSR_users (ID int, '
+    # for i in range(rattable_fk_num):
+    #     temp_str = 'fk_user_{0} int,'.format(i)
+    #     ratusr_users_string += temp_str
+    # ratusr_users_string = ratusr_users_string[0:-1] + ')'
+
     try:
-        c.execute("""CREATE TABLE RatUSR_users (
-                    ID int
-                    )""")
+        c.execute(ratusr_users_string)
         print('RatUSR_users Success')
-    except:
+    except sqlite3.Error as er:
         print('error occured on RatUSR_users table!')
+        print_error(er)
 
 
     ## Create RatBOOK_books table
+    rattable_fk_num = 200
+    ratusr_books_string = 'CREATE TABLE RatBOOK_books (ID int, '
+    for i in range(rattable_fk_num):
+        temp_str = 'fk_book_{0} int,'.format(i)
+        ratusr_books_string += temp_str
+    ratusr_books_string = ratusr_books_string[0:-1] + ')'
+
     try:
-        c.execute("""CREATE TABLE RatBOOK_books (
-                    ID int
-                    )""")
+        c.execute(ratusr_books_string)
         print('RatBOOK_books Success')
-    except:
+    except sqlite3.Error as er:
         print('error occured on RatBOOK_books table!')
+        print_error(er)
 
 
 def add_extra_columns():
@@ -116,17 +145,17 @@ def add_extra_columns():
 
 def add_fk_columns():
     addColumn = 'ALTER TABLE Users ADD COLUMN fk_books int;'
-    addFK = 'ALTER TABLE Users ADD FOREIGN KEY (fk_books) REFERENCES RatBOOK_books(fk_books);'
+    # addFK = 'ALTER TABLE Users ADD FOREIGN KEY (fk_books) REFERENCES RatBOOK_books(fk_books);'
     try:
         c.execute(addColumn)
         print('Users add column Success')
     except:
         print('error occured on altering users for add column!')
-    try:
-        c.execute(addFK)
-        print('Users add FK Success')
-    except:
-        print('error occured on altering users for add FK!')
+    # try:
+    #     c.execute(addFK)
+    #     print('Users add FK Success')
+    # except:
+    #     print('error occured on altering users for add FK!')
 
 
 
@@ -298,7 +327,7 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_test_12.db')
+    conn = sqlite3.connect('bookhound_test_20.db')
     c = conn.cursor()
 
     ## Test creating the book and user table
