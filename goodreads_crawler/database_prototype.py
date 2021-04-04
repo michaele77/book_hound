@@ -84,7 +84,7 @@ def create_base_tables():
 
     ## Create Books table
     try:
-        c.execute("""CREATE TABLE books (
+        c.execute("""CREATE TABLE Books (
                     ID int,
                     title varchar,
                     href varchar,
@@ -189,6 +189,44 @@ def SQL_add_book_node(book_node):
         print_error(er)
 
 
+## Helper function to add a single node to the users table
+def SQL_add_user_node(user_node):
+    ## Have the following structure:
+    ## 1) ID 2) name 3) link 4) rlink 5) fk_books
+    ID          = user_node.ID
+    name        = user_node.name
+    link        = user_node.link
+    rlink       = user_node.ratingslink
+    fk_books    = ID
+
+    try:
+        c.execute("INSERT INTO books VALUES (?, ?, ?, ?, ?)",
+              (ID, name, link, rlink, fk_books))
+        print("     -Success adding: {0}".format(name))
+    except sqlite3.Error as er:
+        print('     -error occured on adding {0}!'.format(name))
+        print_error(er)
+
+
+
+## Helper function that adds a list of users
+def SQL_add_user_node_list(user_list):
+    for cur_user in user_list:
+        ## First check if the user is already in DB
+        ## IF not, then add it
+        if is_ID_in_table('Users', cur_user.ID):
+            continue
+        else:
+            SQL_add_user_node(cur_user)
+
+
+## Helper function to add linker table for either a book (with table of users) or a user (with table of books)
+def SQL_add_linker_table(linker_str, linker_elements):
+    
+    pass
+
+
+
 ## Helper function to return boolean of whether the input ID is in the given table
 def is_ID_in_table(table_name, input_ID):
     # exec_str = "SELECT CASE WHEN EXISTS (SELECT TOP 1 *\
@@ -204,12 +242,15 @@ def is_ID_in_table(table_name, input_ID):
         c.execute(exec_str)
         found_element = c.fetchall()
         if not found_element:
-            print("Search completed, ID {0} not found in {1}".format(input_ID, table_name))
+            return False
+            # print("Search completed, ID {0} not found in {1}".format(input_ID, table_name))
         else:
-            return found_element
+            return True
+            # return found_element
     except sqlite3.Error as er:
         print('error occured on finding {0} in {1}!'.format(input_ID, table_name))
         print_error(er)
+        return False
 
 
 
@@ -410,9 +451,17 @@ if __name__ == "__main__":
         ## Then create a new linker table for this book
         SQL_add_user_node_list(raters_for_book)
 
+        linker_str = 'b_linker_{0}'.format(this_book.ID)
+        linker_elements = []
+        for i in range(this_book.raters):
+            linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
+
+        SQL_add_linker_table(linker_str, linker_elements)
+
+
 
     ## Double check some stuff...
-    print( is_ID_in_table('books', 9732202) ) ## Should output the affirmation
+    print( is_ID_in_table('Books', 9732202) ) ## Should output the affirmation
 
     c.execute("SELECT * FROM books")
     print(c.fetchall()) ## Prints the execution statement above
