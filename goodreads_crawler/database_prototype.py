@@ -41,6 +41,10 @@ def identify_master_book(repeat_list):
     for i,node in enumerate(repeat_list):
         if node.reviewers != 0:
             master_node = node
+            ## Let's fix the reviewer error!
+            ## add all reviewers from a fully defined book as a rater as well!
+            for cur_reviewer in master_node.reviewers:
+                master_node.raters.append(cur_reviewer)
             return master_node, i
 
     # 2) node with most raters pointing to it
@@ -52,6 +56,9 @@ def identify_master_book(repeat_list):
             master_node = node
             mast_indx = i
     return node, mast_indx
+
+
+
 
 
 
@@ -75,7 +82,7 @@ def create_base_tables():
                     link varchar,
                     ratings_link varchar,
                     
-                    fk_books int
+                    fk_books varchar
                     )""")
         print('Users Success')
     except sqlite3.Error as er:
@@ -107,57 +114,7 @@ def create_base_tables():
 
 
 
-    ## Create RatUSR_users table
-    ## Apparently, limit to number of columns per table is 1-2k...Instead, let's make a table per book
-    ## Table will have rows of users that rated a book, columns will be fk to user, user ID, rating, etc
-    # rattable_fk_num = 9000
-    # ratusr_users_string = 'CREATE TABLE RatUSR_users (ID int, '
-    # for i in range(rattable_fk_num):
-    #     temp_str = 'fk_user_{0} int,'.format(i)
-    #     ratusr_users_string += temp_str
-    # ratusr_users_string = ratusr_users_string[0:-1] + ')'
-    #
-    # try:
-    #     c.execute(ratusr_users_string)
-    #     print('RatUSR_users Success')
-    # except sqlite3.Error as er:
-    #     print('error occured on RatUSR_users table!')
-    #     print_error(er)
 
-
-    ## Create RatBOOK_books table
-    rattable_fk_num = 200
-    ratusr_books_string = 'CREATE TABLE RatBOOK_books (ID int, '
-    for i in range(rattable_fk_num):
-        temp_str = 'fk_book_{0} int,'.format(i)
-        ratusr_books_string += temp_str
-    ratusr_books_string = ratusr_books_string[0:-1] + ')'
-
-    try:
-        c.execute(ratusr_books_string)
-        print('RatBOOK_books Success')
-    except sqlite3.Error as er:
-        print('error occured on RatBOOK_books table!')
-        print_error(er)
-
-# def add_fk_columns():
-#     addColumn = 'ALTER TABLE Users ADD COLUMN fk_books int;'
-#     # addFK = 'ALTER TABLE Users ADD FOREIGN KEY (fk_books) REFERENCES RatBOOK_books(fk_books);'
-#     try:
-#         c.execute(addColumn)
-#         print('Users add column Success')
-#     except:
-#         print('error occured on altering users for add column!')
-#     # try:
-#     #     c.execute(addFK)
-#     #     print('Users add FK Success')
-#     # except:
-#     #     print('error occured on altering users for add FK!')
-
-
-
-
-####### SQL HELPER FUNCTIONS!!!!#######
 
 
 ## Helper function to add a single node to the books table
@@ -166,6 +123,7 @@ def SQL_add_book_node(book_node):
     ## 1) ID 2) title 3) href 4) author 5) meta
     ## 6) details 7) series 8) summary 9) image_source
     ## 10) image_binary 11) full_params bool 12) fk_users 13) fk_genres
+    global global_book_errors
     ID          = book_node.ID
     title       = book_node.title
     href        = book_node.href
@@ -177,16 +135,17 @@ def SQL_add_book_node(book_node):
     im_src      = book_node.imageSource
     im_bin      = book_node.imageBinary
     full_param  = book_node.has_full_params
-    fk_users    = 'book_link_' + str(ID)
+    fk_linker    = 'b_linker_' + str(ID)
     fk_genres   = ID ## Should this be something else??
 
     try:
         c.execute("INSERT INTO books VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-              (ID, title, href, author, meta, details, series, summary, im_src, im_bin, full_param, fk_users, fk_genres ))
-        print("Success adding: {0}".format(title))
+              (ID, title, href, author, meta, details, series, summary, im_src, im_bin, full_param, fk_linker, fk_genres ))
+        # print("Success adding: {0}".format(title))
     except sqlite3.Error as er:
         print('error occured on adding {0}!'.format(title))
         print_error(er)
+        global_book_errors += 1
 
 
 ## Helper function to add a single node to the users table
@@ -196,13 +155,13 @@ def SQL_add_user_node(user_node):
     ID          = user_node.ID
     name        = user_node.name
     link        = user_node.link
-    rlink       = user_node.ratingslink
-    fk_books    = ID
+    rlink       = user_node.ratingsLink
+    fk_linker    = 'u_linker_' + str(ID)
 
     try:
-        c.execute("INSERT INTO books VALUES (?, ?, ?, ?, ?)",
-              (ID, name, link, rlink, fk_books))
-        print("     -Success adding: {0}".format(name))
+        c.execute("INSERT INTO Users VALUES (?, ?, ?, ?, ?)",
+              (ID, name, link, rlink, fk_linker))
+        # print("     -Success adding: {0}".format(name))
     except sqlite3.Error as er:
         print('     -error occured on adding {0}!'.format(name))
         print_error(er)
@@ -219,11 +178,52 @@ def SQL_add_user_node_list(user_list):
         else:
             SQL_add_user_node(cur_user)
 
+            ## Also need to add user linker table here as well...
+            ## Weird that we have the linker table addition at different places in the code but whatevez
+            linker_str = 'u_linker_{0}'.format(cur_user.ID)
+            linker_elements = cur_user.books
+            # for ttuple in cur_user.books:
+            #     bookNode = ttuple[0]
+            #     rating_2_book = ttuple[1]
+            #     linker_elements.append((bookNode, rating_2_book))
+
+            SQL_add_linker_table(linker_str, linker_elements)
+
 
 ## Helper function to add linker table for either a book (with table of users) or a user (with table of books)
 def SQL_add_linker_table(linker_str, linker_elements):
-    
-    pass
+    global global_linker_errors
+    global global_blinker_tracker
+
+    ## First create our linker table
+    exec_str = 'CREATE TABLE {0} (ID int, rating float)'.format(linker_str)
+    try:
+        c.execute(exec_str)
+        # print('linker table {0} Success'.format(linker_str))
+    except sqlite3.Error as er:
+        print('error occured on creating linker table {0}!'.format(linker_str))
+        print_error(er)
+        global_linker_errors += 1
+        global_blinker_tracker.append( linker_str.split('_')[-1] )
+        return ## Dont want to insert values into some rando table
+
+    ## Next, append all of the elements as parts of this table
+    ## Rows should be book or user node ID + user_2_book rating
+
+
+    for cur_tuple in linker_elements:
+        node_ID = cur_tuple[0].ID
+        rating = cur_tuple[1]
+
+        try:
+            c.execute("INSERT INTO {0} VALUES (?,?)".format(linker_str),
+                      (node_ID, rating))
+            # print("     -Success adding: {0} to linker table {1}".format(node_ID, linker_str))
+        except sqlite3.Error as er:
+            print('     -error occured on adding {0} to linker table {1}!'.format(node_ID, linker_str))
+            print_error(er)
+
+
 
 
 
@@ -418,7 +418,7 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_test_25.db')
+    conn = sqlite3.connect('bookhound_database.db')
     c = conn.cursor()
 
     ## Test creating the book and user table
@@ -438,13 +438,22 @@ if __name__ == "__main__":
 
     ## Let's start iterating through our master_consolidated_book_list
     ## Add book to a book node, add it's users tp a user node, and create a table linking the book with the users
+    count_tracker = 0
+    global_book_errors = 0
+    global_linker_errors = 0
+    global_blinker_tracker = []
     for this_book in master_consolidated_book_list:
-        print("Book title: {0}".format(this_book.title))
+        if count_tracker % 100 == 0:
+            print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
+            print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
+        count_tracker += 1
+
+        # print("Book title: {0}".format(this_book.title))
 
         SQL_add_book_node(this_book)
 
         raters_for_book = [i[0] for i in this_book.raters]
-        user_2_book_rating = [i[1] for i in this_book.raters]
+        # user_2_book_rating = [i[1] for i in this_book.raters]
 
         ## We have a list of raters for the book and a list for their corresponding ratings to this book
         ## Call a function to add each of these nodes
@@ -452,11 +461,24 @@ if __name__ == "__main__":
         SQL_add_user_node_list(raters_for_book)
 
         linker_str = 'b_linker_{0}'.format(this_book.ID)
-        linker_elements = []
-        for i in range(this_book.raters):
-            linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
+        linker_elements = this_book.raters
+        # for i in range(this_book.raters):
+        #     linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
 
         SQL_add_linker_table(linker_str, linker_elements)
+
+    conn.commit()
+    conn.close()
+
+
+    print("Done adding to prototype database!")
+
+    print('We encountered {0} book node errors'.format(global_book_errors))
+    print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(global_linker_errors))
+    print(global_blinker_tracker)
+
+    ## Some notable errors:
+    ## Revival, Vol. 8: Stay Just A Little Bit Longer (Revival, #8) ----- 33632812
 
 
 
@@ -486,85 +508,6 @@ if __name__ == "__main__":
     #### BELOW IS DEAD ZONE!!!! #####
     #################################
 
-    #
-    # # Create RatUser tables
-    # rattable_fk_num = 9000
-    # ratusr_users_string = 'CREATE TABLE ratusr_users (ID int, '
-    # for i in range(rattable_fk_num):
-    #     temp_str = 'fk_user_{0} int,'.format(i)
-    #     ratusr_users_string += temp_str
-    #
-    # # temp_str = 'PRIMARY KEY (ID),'
-    # # ratusr_users_string += temp_str
-    #
-    # #FOREIGN KEY (PersonID) REFERENCES newtable_10(PersonID))
-    # for i in range(rattable_fk_num):
-    #     temp_str = 'FOREIGN KEY (fk_user_{0}) REFERENCES Users(fk_user_{0}),'.format(i)
-    #     ratusr_users_string += temp_str
-    #
-    # ratusr_users_string = ratusr_users_string[0:-1] + ')'
-    #
-    # try:
-    #     c.execute("""CREATE TABLE Users (
-    #                 ID int,
-    #                 name varchar,
-    #                 link varchar,
-    #                 ratings_link varchar,
-    #                 books enum,
-    #                 books_rating enum,
-    #                 books_id
-    #                 )""")
-    # except:
-    #     print('error occured!')
-    #
-    # try:
-    #     c.execute(ratusr_users_string)
-    # except:
-    #     print("error occured!")
-    #
-    # try:
-    #     c.execute("""CREATE TABLE books (
-    #                 ID int,
-    #                 title varchar,
-    #                 href varchar,
-    #                 PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
-    #                 fk_raters int FOREIGN KEY REFERENCES
-    #                 raters enum,
-    #                 raters_rating enum,
-    #                 raters_id enum
-    #                 )""")
-    # except:
-    #     print('error occured!')
-    #
-    #
-    # # Book table
-    # try:
-    #     c.execute("""CREATE TABLE books (
-    #                 ID int,
-    #                 title varchar,
-    #                 href varchar,
-    #                 PersonID int FOREIGN KEY REFERENCES Persons(PersonID)
-    #                 fk_raters int FOREIGN KEY REFERENCES
-    #                 raters enum,
-    #                 raters_rating enum,
-    #                 raters_id enum
-    #                 )""")
-    # except:
-    #     print('error occured!')
-    #
-    # # User table
-    # try:
-    #     c.execute("""CREATE TABLE users (
-    #                 ID int,
-    #                 name varchar,
-    #                 link varchar,
-    #                 ratings_link varchar,
-    #                 books enum,
-    #                 books_rating enum,
-    #                 books_id
-    #                 )""")
-    # except:
-    #     print('error occured!')
     #
     # # Let's insert 2 books and 2 users
     # # Have 1 user point to only 1 book, while secnd user points to both
