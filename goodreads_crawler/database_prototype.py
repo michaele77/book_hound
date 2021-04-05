@@ -44,7 +44,7 @@ def identify_master_book(repeat_list):
             ## Let's fix the reviewer error!
             ## add all reviewers from a fully defined book as a rater as well!
             for cur_reviewer in master_node.reviewers:
-                master_node.raters.append(cur_reviewer)
+                master_node.raters.append( (cur_reviewer, 4.5) )
             return master_node, i
 
     # 2) node with most raters pointing to it
@@ -82,7 +82,9 @@ def create_base_tables():
                     link varchar,
                     ratings_link varchar,
                     
-                    fk_books varchar
+                    fk_books varchar,
+                    
+                    PRIMARY KEY (ID)
                     )""")
         print('Users Success')
     except sqlite3.Error as er:
@@ -105,11 +107,31 @@ def create_base_tables():
                     full_params bool,
                     
                     fk_users varchar,
-                    fk_genres int
+                    fk_genres int,
+                    
+                    PRIMARY KEY (ID)
                     )""")
         print('Books Success')
     except sqlite3.Error as er:
         print('error occured on Books table!')
+        print_error(er)
+
+
+    ## Now add indexes to the 2 base tables above!
+    ## Create Users table
+    try:
+        c.execute("""CREATE UNIQUE INDEX idx_users_ID ON Users (ID)""")
+        print('Created User Index')
+    except sqlite3.Error as er:
+        print('error occured on User Index Creation!')
+        print_error(er)
+
+    ## Create BOOKS table
+    try:
+        c.execute("""CREATE UNIQUE INDEX idx_BOOKS_ID ON BOOKS (ID)""")
+        print('Created BOOKS Index')
+    except sqlite3.Error as er:
+        print('error occured on BOOKS Index Creation!')
         print_error(er)
 
 
@@ -253,6 +275,74 @@ def is_ID_in_table(table_name, input_ID):
         return False
 
 
+####### API LEVEL INTERFACE FUNCTIONS #######
+
+## Functin to return a list of book IDs based on input book ID
+## For the input book ID, get the b_linker table from SQL
+## Iterate through b_linker table to get all the user nodes that rated the input book
+## Iterate through each of the u_linker tables
+## Return a dictionary, where the keys are the first order related books, and the values are their occurance
+def first_order_books(test_ID):
+    book_dict       = {} ## Store first-order relationed book ID occurances
+    og_rating_dict  = {} ## Store average rating for user_2_original book
+    new_rating_dict = {}  ## Store average rating for user_2_new book
+
+
+    linker_str = 'b_linker_{0}'.format(test_ID)
+    try:
+        linked_users_list = c.execute('SELECT * FROM {0}'.format(linker_str)).fetchall()
+    except sqlite3.Error as er:
+        print('Error accessing {0} table'.format(linker_str))
+        print_error(er)
+        return
+
+
+    for cur_user_tuple in linked_users_list:
+        cur_user_ID = cur_user_tuple[0]
+        rating_user_2_og = cur_user_tuple[1]
+        if not rating_user_2_og:
+            print('{0} has a none review for book {1}'.format(cur_user_ID, test_ID))
+            rating_user_2_og = 2.5
+
+        linker_str = 'u_linker_{0}'.format(cur_user_ID)
+        try:
+            linked_books_list = c.execute('SELECT * FROM {0}'.format(linker_str)).fetchall()
+        except sqlite3.Error as er:
+            print('Error accessing {0} table'.format(linker_str))
+            print_error(er)
+            return
+        if cur_user_ID == 51213745:
+            print(linked_books_list)
+
+        for cur_book_tuple in linked_books_list:
+            cur_book_ID = cur_book_tuple[0]
+            rating_user_2_new = cur_book_tuple[1]
+            if not rating_user_2_new:
+                print('{0} has a none review for book {1}'.format(cur_user_ID, cur_book_ID))
+                rating_user_2_new = 2.5
+
+            ## finally, add to the dictionaries here:
+            if cur_book_ID in book_dict.keys():
+                og_rt = book_dict[cur_book_ID]
+                book_dict[cur_book_ID] += 1
+
+                new_rating_dict[cur_book_ID] = (og_rt*new_rating_dict[cur_book_ID] + rating_user_2_new) / (og_rt + 1)
+            else:
+                book_dict[cur_book_ID]          = 1
+                og_rating_dict[cur_book_ID]     = rating_user_2_og
+                new_rating_dict[cur_book_ID]    = rating_user_2_new
+
+    ## Before we return, we want to remove the original book from these dict... duh
+    del book_dict[test_ID]
+    del og_rating_dict[test_ID]
+    del new_rating_dict[test_ID]
+
+    return book_dict, og_rating_dict, new_rating_dict
+
+
+
+
+
 
 #-----------------------------------------------------------------------------#
 #                            MODULE FUNCTIONS                                 #
@@ -276,6 +366,21 @@ if __name__ == "__main__":
         file_str = 'masterUserList_ref.pkl'
         with open('master_checkpoints/' + file_str, 'rb') as f:  # Python 3: open(..., 'rb')
             master_user_list, master_user_IDs = pickle.load(f)
+
+
+        ## FIRST FIX THE NONE ISSUE
+        ## If a user rates a book as "None", then set that rating to be 2.5 by default
+        None_sum = 0
+        for cur_usr in master_user_list:
+            for indxx, jj in enumerate(cur_usr.books):
+                if jj[1] is None:
+                    tmp_jj = list(jj)
+                    tmp_jj[1] = 2.5
+                    jj = tuple(tmp_jj)
+                    cur_usr.books[indxx] = jj
+                    None_sum += 1
+        print(None_sum)
+
 
         master_book_list = []
         master_book_IDs = []
@@ -389,11 +494,32 @@ if __name__ == "__main__":
 
                 del cur_node
 
+
+        print('About to enter this sum territory')
+
+        None_sum = 0
+        for cur_bk in master_consolidated_book_list:
+            for indxx, jj in enumerate(cur_bk.raters):
+                if jj[1] is None:
+                    tmp_jj = list(jj)
+                    tmp_jj[1] = 2.5
+                    jj = tuple(tmp_jj)
+                    cur_bk.raters[indxx] = jj
+                    None_sum += 1
+        print(None_sum)
+
         print('Done with distilling trackers!')
 
-        # sys.setrecursionlimit(100000)
-        # with open('master_checkpoints/masterLists_prototype.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
-        #     pickle.dump([master_consolidated_book_list, master_user_list, master_consolidated_book_IDs, master_user_IDs], f)
+        # sys.setrecursionlimit(1000000)
+        # with open('master_checkpoints/masterLists_golden.pkl', 'wb') as f:  # Python 3: open(..., 'wb')
+        #     pickle.dump([master_consolidated_book_list, master_user_list], f)
+
+        print('finished loading data')
+        print('Loading time is {0} minute'.format((time.time() - startTime) / 60))
+
+        # sys.setrecursionlimit(1000000)
+        # with open('master_checkpoints/masterLists_golden.pkl', 'rb') as f:  # Python 3: open(..., 'rb')
+        #     master_consolidated_book_list, master_user_list, master_consolidated_book_IDs, master_user_IDs = pickle.load(f)
 
 
     else:
@@ -406,8 +532,11 @@ if __name__ == "__main__":
 
 
 
-    print('finished loading data')
-    print('Loading time is {0} minute'.format((time.time()-startTime)/60))
+
+
+
+
+
     print('next')
 
 
@@ -418,88 +547,150 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_database.db')
+    conn = sqlite3.connect('bookhound_test1_index.db')
     c = conn.cursor()
 
-    ## Test creating the book and user table
+    build_database = input('Do you want to build up the database? (1 for yes)')
+    if build_database == str(1):
 
-    ## Create the basic tables
-    ## This is Books, Users, RatUSR_users, RatBOOK_users
-    create_base_tables()
 
-    # ## Now update tables with foreign keys to each other
-    # ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
-    # #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
-    # add_fk_columns() # Then add the FOREIGN KEY stuff
+        ## Test creating the book and user table
 
+        ## Create the basic tables
+        ## This is Books, Users, RatUSR_users, RatBOOK_users
+        create_base_tables()
 
 
 
+        # ## Now update tables with foreign keys to each other
+        # ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
+        # #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
+        # add_fk_columns() # Then add the FOREIGN KEY stuff
 
-    ## Let's start iterating through our master_consolidated_book_list
-    ## Add book to a book node, add it's users tp a user node, and create a table linking the book with the users
-    count_tracker = 0
-    global_book_errors = 0
-    global_linker_errors = 0
-    global_blinker_tracker = []
-    for this_book in master_consolidated_book_list:
-        if count_tracker % 100 == 0:
-            print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
-            print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
-        count_tracker += 1
 
-        # print("Book title: {0}".format(this_book.title))
 
-        SQL_add_book_node(this_book)
+        ## Let's start iterating through our master_consolidated_book_list
+        ## Add book to a book node, add it's users tp a user node, and create a table linking the book with the users
+        count_tracker = 0
+        global_book_errors = 0
+        global_linker_errors = 0
+        global_blinker_tracker = []
+        for this_book in master_consolidated_book_list:
+            if count_tracker == 1000:
+                ## Stop the databse prematurely
+                break
+            if count_tracker % 100 == 0:
+                print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
+                print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
+            count_tracker += 1
 
-        raters_for_book = [i[0] for i in this_book.raters]
-        # user_2_book_rating = [i[1] for i in this_book.raters]
+            # print("Book title: {0}".format(this_book.title))
 
-        ## We have a list of raters for the book and a list for their corresponding ratings to this book
-        ## Call a function to add each of these nodes
-        ## Then create a new linker table for this book
-        SQL_add_user_node_list(raters_for_book)
+            SQL_add_book_node(this_book)
 
-        linker_str = 'b_linker_{0}'.format(this_book.ID)
-        linker_elements = this_book.raters
-        # for i in range(this_book.raters):
-        #     linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
+            raters_for_book = [i[0] for i in this_book.raters]
+            # user_2_book_rating = [i[1] for i in this_book.raters]
 
-        SQL_add_linker_table(linker_str, linker_elements)
+            ## We have a list of raters for the book and a list for their corresponding ratings to this book
+            ## Call a function to add each of these nodes
+            ## Then create a new linker table for this book
+            SQL_add_user_node_list(raters_for_book)
+
+            linker_str = 'b_linker_{0}'.format(this_book.ID)
+            linker_elements = this_book.raters
+            # for i in range(this_book.raters):
+            #     linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
+
+            SQL_add_linker_table(linker_str, linker_elements)
+
+
+
+
+        print("Done adding to prototype database!")
+
+        print('We encountered {0} book node errors'.format(global_book_errors))
+        print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(
+            global_linker_errors))
+        print(global_blinker_tracker)
+
+
+
+    ## TESTING THE GENERATED DB!
+    ## some Book IDs to play with:
+    ## 1846017 -- City Of Saints And Madmen
+    ## 1 -- HP and half blood prince
+    ## 3 -- HP and sorcerors stone
+    ## 49529403 -- Paris Adrift
+    ## 67700 -- The Persian Boy (Alexander the Great, #2)
+
+    print("Testing book linkage for: Persian Boy")
+    test_ID = 67700
+    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    ## Now let's get the books with the most amount of users agreeing/pointing to it:
+    closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
+    closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
+
+    print("Testing book linkage for: HP sorcerors stone")
+    test_ID = 3
+    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    ## Now let's get the books with the most amount of users agreeing/pointing to it:
+    closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
+    closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
+
+    print("Testing book linkage for: Paris Adrift")
+    test_ID = 49529403
+    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    ## Now let's get the books with the most amount of users agreeing/pointing to it:
+    closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
+    closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
+
+    print("Testing book linkage for: The Space Between Worlds")
+    test_ID = 48848254
+    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    ## Now let's get the books with the most amount of users agreeing/pointing to it:
+    closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
+    closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
+
+
+
+
+
+    print('start 1')
+    exec_str = 'SELECT ID FROM Books WHERE ID = {0}'.format(9732202)
+    c.execute(exec_str)
+    print(c.fetchall())
+    print('end 1')
+
+
+    print('start 2')
+    c.quert(exec_str)
+    r = c.use_result()
+    print(r.fetch_row())
+    print('end 2')
+
 
     conn.commit()
     conn.close()
 
 
-    print("Done adding to prototype database!")
 
-    print('We encountered {0} book node errors'.format(global_book_errors))
-    print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(global_linker_errors))
-    print(global_blinker_tracker)
+
+
 
     ## Some notable errors:
     ## Revival, Vol. 8: Stay Just A Little Bit Longer (Revival, #8) ----- 33632812
 
 
 
-    ## Double check some stuff...
-    print( is_ID_in_table('Books', 9732202) ) ## Should output the affirmation
-
-    c.execute("SELECT * FROM books")
-    print(c.fetchall()) ## Prints the execution statement above
-
-
+    # ## Double check some stuff...
+    # print( is_ID_in_table('Books', 9732202) ) ## Should output the affirmation
+    #
+    # c.execute("SELECT * FROM books")
+    # print(c.fetchall()) ## Prints the execution statement above
 
 
 
 
-
-
-
-
-    conn.commit()
-
-    conn.close()
 
 
 
