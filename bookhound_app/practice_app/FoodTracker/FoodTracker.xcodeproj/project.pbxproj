@@ -13,6 +13,7 @@
 		27613A1526201B6600E7273E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 27613A1426201B6600E7273E /* Preview Assets.xcassets */; };
 		27613A2026201B6600E7273E /* FoodTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27613A1F26201B6600E7273E /* FoodTrackerTests.swift */; };
 		27613A2B26201B6600E7273E /* FoodTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27613A2A26201B6600E7273E /* FoodTrackerUITests.swift */; };
+		278E665426217B3600ABF178 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E665326217B3600ABF178 /* MainView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -45,6 +46,7 @@
 		27613A2626201B6600E7273E /* FoodTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoodTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		27613A2A26201B6600E7273E /* FoodTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTrackerUITests.swift; sourceTree = "<group>"; };
 		27613A2C26201B6600E7273E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		278E665326217B3600ABF178 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -97,6 +99,7 @@
 			children = (
 				27613A0D26201B6500E7273E /* FoodTrackerApp.swift */,
 				27613A0F26201B6500E7273E /* ContentView.swift */,
+				278E665326217B3600ABF178 /* MainView.swift */,
 				27613A1126201B6600E7273E /* Assets.xcassets */,
 				27613A1626201B6600E7273E /* Info.plist */,
 				27613A1326201B6600E7273E /* Preview Content */,
@@ -260,6 +263,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				27613A1026201B6500E7273E /* ContentView.swift in Sources */,
+				278E665426217B3600ABF178 /* MainView.swift in Sources */,
 				27613A0E26201B6500E7273E /* FoodTrackerApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

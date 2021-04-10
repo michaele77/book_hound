@@ -136,6 +136,85 @@ def create_base_tables():
 
 
 
+def create_alt_base_tables():
+    ## Create Users table
+    try:
+        c.execute("""CREATE TABLE Users (
+                        ID int,
+                        name varchar,
+                        link varchar,
+                        ratings_link varchar,
+
+                        PRIMARY KEY (ID)
+                        )""")
+        print('Users Success')
+    except sqlite3.Error as er:
+        print('error occured on Users table!')
+        print_error(er)
+
+    ## Create Books table
+    try:
+        c.execute("""CREATE TABLE Books (
+                        ID int,
+                        title varchar,
+                        href varchar,
+                        author varchar,
+                        meta varchar,
+                        details varchar,
+                        series varchar,
+                        summary varchar,
+                        image_source varchar,
+                        image_binary varbinary,
+                        full_params bool,
+
+                        fk_genres int,
+
+                        PRIMARY KEY (ID)
+                        )""")
+        print('Books Success')
+    except sqlite3.Error as er:
+        print('error occured on Books table!')
+        print_error(er)
+
+    ## Create Edge Table
+    try:
+        c.execute("""CREATE TABLE Edges (
+                        ID int,
+                        book_ID int,
+                        user_ID int,
+                        rating float,
+
+                        PRIMARY KEY (ID)
+                        )""")
+        print('Books Success')
+    except sqlite3.Error as er:
+        print('error occured on Edges table!')
+        print_error(er)
+
+    ## Now add indexes to the 3 base tables above!
+    ## Create Users table
+    try:
+        c.execute("""CREATE UNIQUE INDEX idx_users_ID ON Users (ID)""")
+        print('Created User Index')
+    except sqlite3.Error as er:
+        print('error occured on User Index Creation!')
+        print_error(er)
+
+    ## Create BOOKS table
+    try:
+        c.execute("""CREATE UNIQUE INDEX idx_BOOKS_ID ON Books (ID)""")
+        print('Created BOOKS Index')
+    except sqlite3.Error as er:
+        print('error occured on BOOKS Index Creation!')
+        print_error(er)
+
+    ## Create Edges table
+    try:
+        c.execute("""CREATE INDEX idx_Edges ON Edges (book_ID, user_ID)""")
+        print('Created Edges Index')
+    except sqlite3.Error as er:
+        print('error occured on Edges Index Creation!')
+        print_error(er)
 
 
 
@@ -170,6 +249,38 @@ def SQL_add_book_node(book_node):
         global_book_errors += 1
 
 
+## Helper function to add a single node to the books table
+def SQL_add_alt_book_node(book_node):
+    ## Have the following structure:
+    ## 1) ID 2) title 3) href 4) author 5) meta
+    ## 6) details 7) series 8) summary 9) image_source
+    ## 10) image_binary 11) full_params bool 12) fk_users 13) fk_genres
+    global global_book_errors
+    ID          = book_node.ID
+    title       = book_node.title
+    href        = book_node.href
+    author      = book_node.author
+    meta        = book_node.meta
+    details     = book_node.details
+    series      = book_node.series
+    summary     = book_node.summary
+    im_src      = book_node.imageSource
+    im_bin      = book_node.imageBinary
+    full_param  = book_node.has_full_params
+    fk_genres   = ID ## Should this be something else??
+
+    try:
+        c.execute("INSERT INTO books VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
+              (ID, title, href, author, meta, details, series, summary, im_src, im_bin, full_param, fk_genres ))
+        # print("Success adding: {0}".format(title))
+    except sqlite3.Error as er:
+        print('error occured on adding {0}!'.format(title))
+        print_error(er)
+        global_book_errors += 1
+
+
+
+
 ## Helper function to add a single node to the users table
 def SQL_add_user_node(user_node):
     ## Have the following structure:
@@ -183,6 +294,24 @@ def SQL_add_user_node(user_node):
     try:
         c.execute("INSERT INTO Users VALUES (?, ?, ?, ?, ?)",
               (ID, name, link, rlink, fk_linker))
+        # print("     -Success adding: {0}".format(name))
+    except sqlite3.Error as er:
+        print('     -error occured on adding {0}!'.format(name))
+        print_error(er)
+
+
+## Helper function to add a single node to the users table
+def SQL_add_alt_user_node(user_node):
+    ## Have the following structure:
+    ## 1) ID 2) name 3) link 4) rlink 5) fk_books
+    ID          = user_node.ID
+    name        = user_node.name
+    link        = user_node.link
+    rlink       = user_node.ratingsLink
+
+    try:
+        c.execute("INSERT INTO Users VALUES (?, ?, ?, ?)",
+              (ID, name, link, rlink))
         # print("     -Success adding: {0}".format(name))
     except sqlite3.Error as er:
         print('     -error occured on adding {0}!'.format(name))
@@ -210,6 +339,16 @@ def SQL_add_user_node_list(user_list):
             #     linker_elements.append((bookNode, rating_2_book))
 
             SQL_add_linker_table(linker_str, linker_elements)
+
+## Helper function that adds a list of users
+def SQL_add_alt_user_node_list(user_list):
+    for cur_user in user_list:
+        ## First check if the user is already in DB
+        ## IF not, then add it
+        if is_ID_in_table('Users', cur_user.ID):
+            continue
+        else:
+            SQL_add_alt_user_node(cur_user)
 
 
 ## Helper function to add linker table for either a book (with table of users) or a user (with table of books)
@@ -246,7 +385,29 @@ def SQL_add_linker_table(linker_str, linker_elements):
             print_error(er)
 
 
+## Helper function to add all the edges of raters that rated a given book
+## For N raters, add N rows, where row will be book_ID -- user_x, for x in range(N)
+def SQL_add_graphEdge_rows(book_ID, book_raters_list):
+    global global_linker_errors
+    global global_numberOfEdges
 
+    ## Next, append all of the elements as parts of this table
+    ## Rows should be book or user node ID + user_2_book rating
+
+    for cur_tuple in book_raters_list:
+        user_ID = cur_tuple[0].ID
+        rating = cur_tuple[1]
+        if not rating:
+            print('adding none rater')
+            rating = 2.5
+
+        try:
+            c.execute("INSERT INTO Edges VALUES (?,?,?,?)", (global_numberOfEdges, book_ID, user_ID, rating))
+            global_numberOfEdges += 1
+        except sqlite3.Error as er:
+            print('     -error occured on adding {0} and {1} to Edges Table!'.format(book_ID, user_ID))
+            global_linker_errors += 1
+            print_error(er)
 
 
 ## Helper function to return boolean of whether the input ID is in the given table
@@ -547,71 +708,109 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_test1_index.db')
+    conn = sqlite3.connect('bookhound_graphtest_2.db')
     c = conn.cursor()
 
     build_database = input('Do you want to build up the database? (1 for yes)')
     if build_database == str(1):
+        DB_type = input('What type of database? 1 for multi-table, 2 for edge-table graph approach')
+
+        if DB_type == str(1):
+
+            ## Test creating the book and user table
+
+            ## Create the basic tables
+            ## This is Books, Users, RatUSR_users, RatBOOK_users
+            create_base_tables()
 
 
-        ## Test creating the book and user table
+            # ## Now update tables with foreign keys to each other
+            # ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
+            # #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
+            # add_fk_columns() # Then add the FOREIGN KEY stuff
 
-        ## Create the basic tables
-        ## This is Books, Users, RatUSR_users, RatBOOK_users
-        create_base_tables()
+            ## Let's start iterating through our master_consolidated_book_list
+            ## Add book to a book node, add it's users tp a user node, and create a table linking the book with the users
+            count_tracker = 0
+            global_book_errors = 0
+            global_linker_errors = 0
+
+            global_blinker_tracker = []
+            for this_book in master_consolidated_book_list:
+                if count_tracker == 1000:
+                    ## Stop the databse prematurely
+                    break
+                if count_tracker % 100 == 0:
+                    print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
+                    print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
+                count_tracker += 1
+
+                # print("Book title: {0}".format(this_book.title))
+
+                SQL_add_book_node(this_book)
+
+                raters_for_book = [i[0] for i in this_book.raters]
+                # user_2_book_rating = [i[1] for i in this_book.raters]
+
+                ## We have a list of raters for the book and a list for their corresponding ratings to this book
+                ## Call a function to add each of these nodes
+                ## Then create a new linker table for this book
+                SQL_add_user_node_list(raters_for_book)
+
+                linker_str = 'b_linker_{0}'.format(this_book.ID)
+                linker_elements = this_book.raters
+                # for i in range(this_book.raters):
+                #     linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
+
+                SQL_add_linker_table(linker_str, linker_elements)
 
 
+            print("Done adding to prototype database!")
 
-        # ## Now update tables with foreign keys to each other
-        # ## Books should have fk_raters, Users fk_books, RatUSR_users fk_user_x, and RatBOOK_books fk_book_x
-        # #addColumn = "ALTER TABLE student ADD COLUMN Address varchar(32)"
-        # add_fk_columns() # Then add the FOREIGN KEY stuff
-
-
-
-        ## Let's start iterating through our master_consolidated_book_list
-        ## Add book to a book node, add it's users tp a user node, and create a table linking the book with the users
-        count_tracker = 0
-        global_book_errors = 0
-        global_linker_errors = 0
-        global_blinker_tracker = []
-        for this_book in master_consolidated_book_list:
-            if count_tracker == 1000:
-                ## Stop the databse prematurely
-                break
-            if count_tracker % 100 == 0:
-                print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
-                print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
-            count_tracker += 1
-
-            # print("Book title: {0}".format(this_book.title))
-
-            SQL_add_book_node(this_book)
-
-            raters_for_book = [i[0] for i in this_book.raters]
-            # user_2_book_rating = [i[1] for i in this_book.raters]
-
-            ## We have a list of raters for the book and a list for their corresponding ratings to this book
-            ## Call a function to add each of these nodes
-            ## Then create a new linker table for this book
-            SQL_add_user_node_list(raters_for_book)
-
-            linker_str = 'b_linker_{0}'.format(this_book.ID)
-            linker_elements = this_book.raters
-            # for i in range(this_book.raters):
-            #     linker_elements.append( (raters_for_book[i], user_2_book_rating[i]))
-
-            SQL_add_linker_table(linker_str, linker_elements)
-
+            print('We encountered {0} book node errors'.format(global_book_errors))
+            print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(
+                global_linker_errors))
+            print(global_blinker_tracker)
 
 
 
-        print("Done adding to prototype database!")
+        elif DB_type == str(2):
+            create_alt_base_tables()
 
-        print('We encountered {0} book node errors'.format(global_book_errors))
-        print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(
-            global_linker_errors))
-        print(global_blinker_tracker)
+            count_tracker = 0
+            global_book_errors = 0
+            global_linker_errors = 0
+            global_numberOfEdges = 0
+            global_blinker_tracker = []
+            for this_book in master_consolidated_book_list:
+                if count_tracker == 1000:
+                    ## Stop the databse prematurely
+                    break
+                if count_tracker % 100 == 0:
+                    print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
+                    print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
+                count_tracker += 1
+
+                SQL_add_alt_book_node(this_book)
+
+                raters_for_book = [i[0] for i in this_book.raters]
+                # user_2_book_rating = [i[1] for i in this_book.raters]
+
+                ## We have a list of raters for the book and a list for their corresponding ratings to this book
+                ## Call a function to add each of these nodes
+                ## Then create a new linker table for this book
+                SQL_add_alt_user_node_list(raters_for_book)
+
+                SQL_add_graphEdge_rows(this_book.ID, this_book.raters)
+
+
+            print("Done adding to prototype database!")
+
+            print('We encountered {0} book node errors'.format(global_book_errors))
+            print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(
+                global_linker_errors))
+            print(global_blinker_tracker)
+
 
 
 
@@ -671,6 +870,8 @@ if __name__ == "__main__":
 
     conn.commit()
     conn.close()
+
+
 
 
 
