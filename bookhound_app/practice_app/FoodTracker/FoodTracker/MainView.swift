@@ -14,12 +14,14 @@ struct MainView: View {
                 Label("view1", systemImage: "list.dash")
                 
             }
+            DraggingDotView().tabItem {
+                Label("DragTheDot", systemImage: "flame")
+            }
+            
             
         }
         
-        ContentView().tabItem {
-            Label("Other One!", systemImage: "flame")
-        }
+        
         
     }
 }

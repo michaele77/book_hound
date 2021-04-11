@@ -502,6 +502,63 @@ def first_order_books(test_ID):
 
 
 
+## Helper function for alternate search
+## Used for search through the edges table
+def first_order_books_edgeSearch(test_ID):
+    book_dict       = {} ## Store first-order relationed book ID occurances
+    og_rating_dict  = {} ## Store average rating for user_2_original book
+    new_rating_dict = {}  ## Store average rating for user_2_new book
+
+
+    try:
+        linked_users_list = c.execute('SELECT * FROM Edges WHERE book_ID = {0}'.format(test_ID)).fetchall()
+    except sqlite3.Error as er:
+        print('Error accessing {0} book_ID from Edges'.format(test_ID))
+        print_error(er)
+        return
+
+
+    for cur_user_quad in linked_users_list:
+        cur_user_ID = cur_user_quad[2]
+        rating_user_2_og = cur_user_quad[3]
+
+        try:
+            linked_books_list = c.execute('SELECT * FROM Edges WHERE user_ID = {0}'.format(cur_user_ID)).fetchall()
+        except sqlite3.Error as er:
+            print('Error accessing {0} user_ID from Edges '.format(cur_user_ID))
+            print_error(er)
+            return
+        if cur_user_ID == 51213745:
+            print(linked_books_list)
+
+        for cur_book_tuple in linked_books_list:
+            cur_book_ID = cur_book_tuple[1]
+            rating_user_2_new = cur_book_tuple[3]
+
+            ## finally, add to the dictionaries here:
+            if cur_book_ID in book_dict.keys():
+                og_rt = book_dict[cur_book_ID]
+                book_dict[cur_book_ID] += 1
+
+                new_rating_dict[cur_book_ID] = (og_rt*new_rating_dict[cur_book_ID] + rating_user_2_new) / (og_rt + 1)
+            else:
+                book_dict[cur_book_ID]          = 1
+                og_rating_dict[cur_book_ID]     = rating_user_2_og
+                new_rating_dict[cur_book_ID]    = rating_user_2_new
+
+    ## Before we return, we want to remove the original book from these dict... duh
+    del book_dict[test_ID]
+    del og_rating_dict[test_ID]
+    del new_rating_dict[test_ID]
+
+    return book_dict, og_rating_dict, new_rating_dict
+
+
+
+
+
+
+
 
 
 
@@ -708,7 +765,7 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_graphtest_2.db')
+    conn = sqlite3.connect('bookhound_graphtest_3.db')
     c = conn.cursor()
 
     build_database = input('Do you want to build up the database? (1 for yes)')
@@ -737,9 +794,9 @@ if __name__ == "__main__":
 
             global_blinker_tracker = []
             for this_book in master_consolidated_book_list:
-                if count_tracker == 1000:
-                    ## Stop the databse prematurely
-                    break
+                # if count_tracker == 1000:
+                #     ## Stop the databse prematurely
+                #     break
                 if count_tracker % 100 == 0:
                     print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
                     print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
@@ -783,12 +840,13 @@ if __name__ == "__main__":
             global_numberOfEdges = 0
             global_blinker_tracker = []
             for this_book in master_consolidated_book_list:
-                if count_tracker == 1000:
-                    ## Stop the databse prematurely
-                    break
+                # if count_tracker == 1000:
+                #     ## Stop the databse prematurely
+                #     break
                 if count_tracker % 100 == 0:
                     print('On book {0} / {1}'.format(count_tracker, len(master_consolidated_book_list)))
                     print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
+                    print('     -->have seen {0} edges so far'.format(global_numberOfEdges))
                 count_tracker += 1
 
                 SQL_add_alt_book_node(this_book)
@@ -824,28 +882,28 @@ if __name__ == "__main__":
 
     print("Testing book linkage for: Persian Boy")
     test_ID = 67700
-    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    linked_books, og_ratings, new_ratings = first_order_books_edgeSearch(test_ID)
     ## Now let's get the books with the most amount of users agreeing/pointing to it:
     closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
     closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
 
     print("Testing book linkage for: HP sorcerors stone")
     test_ID = 3
-    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    linked_books, og_ratings, new_ratings = first_order_books_edgeSearch(test_ID)
     ## Now let's get the books with the most amount of users agreeing/pointing to it:
     closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
     closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
 
     print("Testing book linkage for: Paris Adrift")
     test_ID = 49529403
-    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    linked_books, og_ratings, new_ratings = first_order_books_edgeSearch(test_ID)
     ## Now let's get the books with the most amount of users agreeing/pointing to it:
     closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
     closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()
 
     print("Testing book linkage for: The Space Between Worlds")
     test_ID = 48848254
-    linked_books, og_ratings, new_ratings = first_order_books(test_ID)
+    linked_books, og_ratings, new_ratings = first_order_books_edgeSearch(test_ID)
     ## Now let's get the books with the most amount of users agreeing/pointing to it:
     closest_book_ID = max(linked_books, key=lambda x: linked_books[x])
     closest_title = c.execute('SELECT title FROM Books WHERE ID = {0}'.format(closest_book_ID)).fetchall()

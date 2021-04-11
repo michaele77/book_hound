@@ -13,7 +13,6 @@ struct ContentView: View {
     @State var rand_num = 0
     
     
-    
     var body: some View {
         
         ScrollView {

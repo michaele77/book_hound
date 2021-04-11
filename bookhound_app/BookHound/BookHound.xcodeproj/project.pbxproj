@@ -7,66 +7,64 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		27613A0E26201B6500E7273E /* FoodTrackerApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27613A0D26201B6500E7273E /* FoodTrackerApp.swift */; };
-		27613A1026201B6500E7273E /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27613A0F26201B6500E7273E /* ContentView.swift */; };
-		27613A1226201B6600E7273E /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 27613A1126201B6600E7273E /* Assets.xcassets */; };
-		27613A1526201B6600E7273E /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 27613A1426201B6600E7273E /* Preview Assets.xcassets */; };
-		27613A2026201B6600E7273E /* FoodTrackerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27613A1F26201B6600E7273E /* FoodTrackerTests.swift */; };
-		27613A2B26201B6600E7273E /* FoodTrackerUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27613A2A26201B6600E7273E /* FoodTrackerUITests.swift */; };
-		278E665426217B3600ABF178 /* MainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E665326217B3600ABF178 /* MainView.swift */; };
-		278E66592622329800ABF178 /* DraggingDotView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66582622329800ABF178 /* DraggingDotView.swift */; };
+		278E666A2622C10300ABF178 /* BookHoundApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66692622C10300ABF178 /* BookHoundApp.swift */; };
+		278E666C2622C10300ABF178 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E666B2622C10300ABF178 /* ContentView.swift */; };
+		278E666E2622C10500ABF178 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 278E666D2622C10500ABF178 /* Assets.xcassets */; };
+		278E66712622C10500ABF178 /* Preview Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 278E66702622C10500ABF178 /* Preview Assets.xcassets */; };
+		278E667C2622C10600ABF178 /* BookHoundTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E667B2622C10600ABF178 /* BookHoundTests.swift */; };
+		278E66872622C10600ABF178 /* BookHoundUITests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66862622C10600ABF178 /* BookHoundUITests.swift */; };
+		278E66982622C15C00ABF178 /* initialSelectionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66972622C15C00ABF178 /* initialSelectionView.swift */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
-		27613A1C26201B6600E7273E /* PBXContainerItemProxy */ = {
+		278E66782622C10600ABF178 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 27613A0226201B6500E7273E /* Project object */;
+			containerPortal = 278E665E2622C10300ABF178 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 27613A0926201B6500E7273E;
-			remoteInfo = FoodTracker;
+			remoteGlobalIDString = 278E66652622C10300ABF178;
+			remoteInfo = BookHound;
 		};
-		27613A2726201B6600E7273E /* PBXContainerItemProxy */ = {
+		278E66832622C10600ABF178 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
-			containerPortal = 27613A0226201B6500E7273E /* Project object */;
+			containerPortal = 278E665E2622C10300ABF178 /* Project object */;
 			proxyType = 1;
-			remoteGlobalIDString = 27613A0926201B6500E7273E;
-			remoteInfo = FoodTracker;
+			remoteGlobalIDString = 278E66652622C10300ABF178;
+			remoteInfo = BookHound;
 		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		27613A0A26201B6500E7273E /* FoodTracker.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FoodTracker.app; sourceTree = BUILT_PRODUCTS_DIR; };
-		27613A0D26201B6500E7273E /* FoodTrackerApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTrackerApp.swift; sourceTree = "<group>"; };
-		27613A0F26201B6500E7273E /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
-		27613A1126201B6600E7273E /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
-		27613A1426201B6600E7273E /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
-		27613A1626201B6600E7273E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		27613A1B26201B6600E7273E /* FoodTrackerTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoodTrackerTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		27613A1F26201B6600E7273E /* FoodTrackerTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTrackerTests.swift; sourceTree = "<group>"; };
-		27613A2126201B6600E7273E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		27613A2626201B6600E7273E /* FoodTrackerUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = FoodTrackerUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
-		27613A2A26201B6600E7273E /* FoodTrackerUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FoodTrackerUITests.swift; sourceTree = "<group>"; };
-		27613A2C26201B6600E7273E /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
-		278E665326217B3600ABF178 /* MainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainView.swift; sourceTree = "<group>"; };
-		278E66582622329800ABF178 /* DraggingDotView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DraggingDotView.swift; sourceTree = "<group>"; };
+		278E66662622C10300ABF178 /* BookHound.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookHound.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		278E66692622C10300ABF178 /* BookHoundApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookHoundApp.swift; sourceTree = "<group>"; };
+		278E666B2622C10300ABF178 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		278E666D2622C10500ABF178 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
+		278E66702622C10500ABF178 /* Preview Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = "Preview Assets.xcassets"; sourceTree = "<group>"; };
+		278E66722622C10500ABF178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		278E66772622C10600ABF178 /* BookHoundTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookHoundTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		278E667B2622C10600ABF178 /* BookHoundTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookHoundTests.swift; sourceTree = "<group>"; };
+		278E667D2622C10600ABF178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		278E66822622C10600ABF178 /* BookHoundUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = BookHoundUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		278E66862622C10600ABF178 /* BookHoundUITests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookHoundUITests.swift; sourceTree = "<group>"; };
+		278E66882622C10600ABF178 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
+		278E66972622C15C00ABF178 /* initialSelectionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = initialSelectionView.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
-		27613A0726201B6500E7273E /* Frameworks */ = {
+		278E66632622C10300ABF178 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27613A1826201B6600E7273E /* Frameworks */ = {
+		278E66742622C10600ABF178 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27613A2326201B6600E7273E /* Frameworks */ = {
+		278E667F2622C10600ABF178 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -76,145 +74,144 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
-		27613A0126201B6500E7273E = {
+		278E665D2622C10300ABF178 = {
 			isa = PBXGroup;
 			children = (
-				27613A0C26201B6500E7273E /* FoodTracker */,
-				27613A1E26201B6600E7273E /* FoodTrackerTests */,
-				27613A2926201B6600E7273E /* FoodTrackerUITests */,
-				27613A0B26201B6500E7273E /* Products */,
+				278E66682622C10300ABF178 /* BookHound */,
+				278E667A2622C10600ABF178 /* BookHoundTests */,
+				278E66852622C10600ABF178 /* BookHoundUITests */,
+				278E66672622C10300ABF178 /* Products */,
 			);
 			sourceTree = "<group>";
 		};
-		27613A0B26201B6500E7273E /* Products */ = {
+		278E66672622C10300ABF178 /* Products */ = {
 			isa = PBXGroup;
 			children = (
-				27613A0A26201B6500E7273E /* FoodTracker.app */,
-				27613A1B26201B6600E7273E /* FoodTrackerTests.xctest */,
-				27613A2626201B6600E7273E /* FoodTrackerUITests.xctest */,
+				278E66662622C10300ABF178 /* BookHound.app */,
+				278E66772622C10600ABF178 /* BookHoundTests.xctest */,
+				278E66822622C10600ABF178 /* BookHoundUITests.xctest */,
 			);
 			name = Products;
 			sourceTree = "<group>";
 		};
-		27613A0C26201B6500E7273E /* FoodTracker */ = {
+		278E66682622C10300ABF178 /* BookHound */ = {
 			isa = PBXGroup;
 			children = (
-				27613A0D26201B6500E7273E /* FoodTrackerApp.swift */,
-				27613A0F26201B6500E7273E /* ContentView.swift */,
-				278E66582622329800ABF178 /* DraggingDotView.swift */,
-				278E665326217B3600ABF178 /* MainView.swift */,
-				27613A1126201B6600E7273E /* Assets.xcassets */,
-				27613A1626201B6600E7273E /* Info.plist */,
-				27613A1326201B6600E7273E /* Preview Content */,
+				278E66692622C10300ABF178 /* BookHoundApp.swift */,
+				278E666B2622C10300ABF178 /* ContentView.swift */,
+				278E66972622C15C00ABF178 /* initialSelectionView.swift */,
+				278E666D2622C10500ABF178 /* Assets.xcassets */,
+				278E66722622C10500ABF178 /* Info.plist */,
+				278E666F2622C10500ABF178 /* Preview Content */,
 			);
-			path = FoodTracker;
+			path = BookHound;
 			sourceTree = "<group>";
 		};
-		27613A1326201B6600E7273E /* Preview Content */ = {
+		278E666F2622C10500ABF178 /* Preview Content */ = {
 			isa = PBXGroup;
 			children = (
-				27613A1426201B6600E7273E /* Preview Assets.xcassets */,
+				278E66702622C10500ABF178 /* Preview Assets.xcassets */,
 			);
 			path = "Preview Content";
 			sourceTree = "<group>";
 		};
-		27613A1E26201B6600E7273E /* FoodTrackerTests */ = {
+		278E667A2622C10600ABF178 /* BookHoundTests */ = {
 			isa = PBXGroup;
 			children = (
-				27613A1F26201B6600E7273E /* FoodTrackerTests.swift */,
-				27613A2126201B6600E7273E /* Info.plist */,
+				278E667B2622C10600ABF178 /* BookHoundTests.swift */,
+				278E667D2622C10600ABF178 /* Info.plist */,
 			);
-			path = FoodTrackerTests;
+			path = BookHoundTests;
 			sourceTree = "<group>";
 		};
-		27613A2926201B6600E7273E /* FoodTrackerUITests */ = {
+		278E66852622C10600ABF178 /* BookHoundUITests */ = {
 			isa = PBXGroup;
 			children = (
-				27613A2A26201B6600E7273E /* FoodTrackerUITests.swift */,
-				27613A2C26201B6600E7273E /* Info.plist */,
+				278E66862622C10600ABF178 /* BookHoundUITests.swift */,
+				278E66882622C10600ABF178 /* Info.plist */,
 			);
-			path = FoodTrackerUITests;
+			path = BookHoundUITests;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
-		27613A0926201B6500E7273E /* FoodTracker */ = {
+		278E66652622C10300ABF178 /* BookHound */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 27613A2F26201B6600E7273E /* Build configuration list for PBXNativeTarget "FoodTracker" */;
+			buildConfigurationList = 278E668B2622C10600ABF178 /* Build configuration list for PBXNativeTarget "BookHound" */;
 			buildPhases = (
-				27613A0626201B6500E7273E /* Sources */,
-				27613A0726201B6500E7273E /* Frameworks */,
-				27613A0826201B6500E7273E /* Resources */,
+				278E66622622C10300ABF178 /* Sources */,
+				278E66632622C10300ABF178 /* Frameworks */,
+				278E66642622C10300ABF178 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = FoodTracker;
-			productName = FoodTracker;
-			productReference = 27613A0A26201B6500E7273E /* FoodTracker.app */;
+			name = BookHound;
+			productName = BookHound;
+			productReference = 278E66662622C10300ABF178 /* BookHound.app */;
 			productType = "com.apple.product-type.application";
 		};
-		27613A1A26201B6600E7273E /* FoodTrackerTests */ = {
+		278E66762622C10600ABF178 /* BookHoundTests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 27613A3226201B6600E7273E /* Build configuration list for PBXNativeTarget "FoodTrackerTests" */;
+			buildConfigurationList = 278E668E2622C10600ABF178 /* Build configuration list for PBXNativeTarget "BookHoundTests" */;
 			buildPhases = (
-				27613A1726201B6600E7273E /* Sources */,
-				27613A1826201B6600E7273E /* Frameworks */,
-				27613A1926201B6600E7273E /* Resources */,
+				278E66732622C10600ABF178 /* Sources */,
+				278E66742622C10600ABF178 /* Frameworks */,
+				278E66752622C10600ABF178 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				27613A1D26201B6600E7273E /* PBXTargetDependency */,
+				278E66792622C10600ABF178 /* PBXTargetDependency */,
 			);
-			name = FoodTrackerTests;
-			productName = FoodTrackerTests;
-			productReference = 27613A1B26201B6600E7273E /* FoodTrackerTests.xctest */;
+			name = BookHoundTests;
+			productName = BookHoundTests;
+			productReference = 278E66772622C10600ABF178 /* BookHoundTests.xctest */;
 			productType = "com.apple.product-type.bundle.unit-test";
 		};
-		27613A2526201B6600E7273E /* FoodTrackerUITests */ = {
+		278E66812622C10600ABF178 /* BookHoundUITests */ = {
 			isa = PBXNativeTarget;
-			buildConfigurationList = 27613A3526201B6600E7273E /* Build configuration list for PBXNativeTarget "FoodTrackerUITests" */;
+			buildConfigurationList = 278E66912622C10600ABF178 /* Build configuration list for PBXNativeTarget "BookHoundUITests" */;
 			buildPhases = (
-				27613A2226201B6600E7273E /* Sources */,
-				27613A2326201B6600E7273E /* Frameworks */,
-				27613A2426201B6600E7273E /* Resources */,
+				278E667E2622C10600ABF178 /* Sources */,
+				278E667F2622C10600ABF178 /* Frameworks */,
+				278E66802622C10600ABF178 /* Resources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
-				27613A2826201B6600E7273E /* PBXTargetDependency */,
+				278E66842622C10600ABF178 /* PBXTargetDependency */,
 			);
-			name = FoodTrackerUITests;
-			productName = FoodTrackerUITests;
-			productReference = 27613A2626201B6600E7273E /* FoodTrackerUITests.xctest */;
+			name = BookHoundUITests;
+			productName = BookHoundUITests;
+			productReference = 278E66822622C10600ABF178 /* BookHoundUITests.xctest */;
 			productType = "com.apple.product-type.bundle.ui-testing";
 		};
 /* End PBXNativeTarget section */
 
 /* Begin PBXProject section */
-		27613A0226201B6500E7273E /* Project object */ = {
+		278E665E2622C10300ABF178 /* Project object */ = {
 			isa = PBXProject;
 			attributes = {
 				LastSwiftUpdateCheck = 1240;
 				LastUpgradeCheck = 1240;
 				TargetAttributes = {
-					27613A0926201B6500E7273E = {
+					278E66652622C10300ABF178 = {
 						CreatedOnToolsVersion = 12.4;
 					};
-					27613A1A26201B6600E7273E = {
+					278E66762622C10600ABF178 = {
 						CreatedOnToolsVersion = 12.4;
-						TestTargetID = 27613A0926201B6500E7273E;
+						TestTargetID = 278E66652622C10300ABF178;
 					};
-					27613A2526201B6600E7273E = {
+					278E66812622C10600ABF178 = {
 						CreatedOnToolsVersion = 12.4;
-						TestTargetID = 27613A0926201B6500E7273E;
+						TestTargetID = 278E66652622C10300ABF178;
 					};
 				};
 			};
-			buildConfigurationList = 27613A0526201B6500E7273E /* Build configuration list for PBXProject "FoodTracker" */;
+			buildConfigurationList = 278E66612622C10300ABF178 /* Build configuration list for PBXProject "BookHound" */;
 			compatibilityVersion = "Xcode 9.3";
 			developmentRegion = en;
 			hasScannedForEncodings = 0;
@@ -222,36 +219,36 @@
 				en,
 				Base,
 			);
-			mainGroup = 27613A0126201B6500E7273E;
-			productRefGroup = 27613A0B26201B6500E7273E /* Products */;
+			mainGroup = 278E665D2622C10300ABF178;
+			productRefGroup = 278E66672622C10300ABF178 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
-				27613A0926201B6500E7273E /* FoodTracker */,
-				27613A1A26201B6600E7273E /* FoodTrackerTests */,
-				27613A2526201B6600E7273E /* FoodTrackerUITests */,
+				278E66652622C10300ABF178 /* BookHound */,
+				278E66762622C10600ABF178 /* BookHoundTests */,
+				278E66812622C10600ABF178 /* BookHoundUITests */,
 			);
 		};
 /* End PBXProject section */
 
 /* Begin PBXResourcesBuildPhase section */
-		27613A0826201B6500E7273E /* Resources */ = {
+		278E66642622C10300ABF178 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27613A1526201B6600E7273E /* Preview Assets.xcassets in Resources */,
-				27613A1226201B6600E7273E /* Assets.xcassets in Resources */,
+				278E66712622C10500ABF178 /* Preview Assets.xcassets in Resources */,
+				278E666E2622C10500ABF178 /* Assets.xcassets in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27613A1926201B6600E7273E /* Resources */ = {
+		278E66752622C10600ABF178 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27613A2426201B6600E7273E /* Resources */ = {
+		278E66802622C10600ABF178 /* Resources */ = {
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -261,50 +258,49 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
-		27613A0626201B6500E7273E /* Sources */ = {
+		278E66622622C10300ABF178 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27613A1026201B6500E7273E /* ContentView.swift in Sources */,
-				278E66592622329800ABF178 /* DraggingDotView.swift in Sources */,
-				278E665426217B3600ABF178 /* MainView.swift in Sources */,
-				27613A0E26201B6500E7273E /* FoodTrackerApp.swift in Sources */,
+				278E666C2622C10300ABF178 /* ContentView.swift in Sources */,
+				278E66982622C15C00ABF178 /* initialSelectionView.swift in Sources */,
+				278E666A2622C10300ABF178 /* BookHoundApp.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27613A1726201B6600E7273E /* Sources */ = {
+		278E66732622C10600ABF178 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27613A2026201B6600E7273E /* FoodTrackerTests.swift in Sources */,
+				278E667C2622C10600ABF178 /* BookHoundTests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
-		27613A2226201B6600E7273E /* Sources */ = {
+		278E667E2622C10600ABF178 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				27613A2B26201B6600E7273E /* FoodTrackerUITests.swift in Sources */,
+				278E66872622C10600ABF178 /* BookHoundUITests.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
 
 /* Begin PBXTargetDependency section */
-		27613A1D26201B6600E7273E /* PBXTargetDependency */ = {
+		278E66792622C10600ABF178 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 27613A0926201B6500E7273E /* FoodTracker */;
-			targetProxy = 27613A1C26201B6600E7273E /* PBXContainerItemProxy */;
+			target = 278E66652622C10300ABF178 /* BookHound */;
+			targetProxy = 278E66782622C10600ABF178 /* PBXContainerItemProxy */;
 		};
-		27613A2826201B6600E7273E /* PBXTargetDependency */ = {
+		278E66842622C10600ABF178 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
-			target = 27613A0926201B6500E7273E /* FoodTracker */;
-			targetProxy = 27613A2726201B6600E7273E /* PBXContainerItemProxy */;
+			target = 278E66652622C10300ABF178 /* BookHound */;
+			targetProxy = 278E66832622C10600ABF178 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
-		27613A2D26201B6600E7273E /* Debug */ = {
+		278E66892622C10600ABF178 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -365,7 +361,7 @@
 			};
 			name = Debug;
 		};
-		27613A2E26201B6600E7273E /* Release */ = {
+		278E668A2622C10600ABF178 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
@@ -420,168 +416,168 @@
 			};
 			name = Release;
 		};
-		27613A3026201B6600E7273E /* Debug */ = {
+		278E668C2622C10600ABF178 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"FoodTracker/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"BookHound/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = FoodTracker/Info.plist;
+				INFOPLIST_FILE = BookHound/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FoodTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mershov.BookHound;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
 		};
-		27613A3126201B6600E7273E /* Release */ = {
+		278E668D2622C10600ABF178 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
 				CODE_SIGN_STYLE = Automatic;
-				DEVELOPMENT_ASSET_PATHS = "\"FoodTracker/Preview Content\"";
+				DEVELOPMENT_ASSET_PATHS = "\"BookHound/Preview Content\"";
 				ENABLE_PREVIEWS = YES;
-				INFOPLIST_FILE = FoodTracker/Info.plist;
+				INFOPLIST_FILE = BookHound/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FoodTracker;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mershov.BookHound;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Release;
 		};
-		27613A3326201B6600E7273E /* Debug */ = {
+		278E668F2622C10600ABF178 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = FoodTrackerTests/Info.plist;
+				INFOPLIST_FILE = BookHoundTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FoodTrackerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mershov.BookHoundTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FoodTracker.app/FoodTracker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BookHound.app/BookHound";
 			};
 			name = Debug;
 		};
-		27613A3426201B6600E7273E /* Release */ = {
+		278E66902622C10600ABF178 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				BUNDLE_LOADER = "$(TEST_HOST)";
 				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = FoodTrackerTests/Info.plist;
+				INFOPLIST_FILE = BookHoundTests/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 14.0;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FoodTrackerTests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mershov.BookHoundTests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FoodTracker.app/FoodTracker";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/BookHound.app/BookHound";
 			};
 			name = Release;
 		};
-		27613A3626201B6600E7273E /* Debug */ = {
+		278E66922622C10600ABF178 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = FoodTrackerUITests/Info.plist;
+				INFOPLIST_FILE = BookHoundUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FoodTrackerUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mershov.BookHoundUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = FoodTracker;
+				TEST_TARGET_NAME = BookHound;
 			};
 			name = Debug;
 		};
-		27613A3726201B6600E7273E /* Release */ = {
+		278E66932622C10600ABF178 /* Release */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ALWAYS_EMBED_SWIFT_STANDARD_LIBRARIES = YES;
 				CODE_SIGN_STYLE = Automatic;
-				INFOPLIST_FILE = FoodTrackerUITests/Info.plist;
+				INFOPLIST_FILE = BookHoundUITests/Info.plist;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 					"@loader_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.example.FoodTrackerUITests;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mershov.BookHoundUITests;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
-				TEST_TARGET_NAME = FoodTracker;
+				TEST_TARGET_NAME = BookHound;
 			};
 			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
-		27613A0526201B6500E7273E /* Build configuration list for PBXProject "FoodTracker" */ = {
+		278E66612622C10300ABF178 /* Build configuration list for PBXProject "BookHound" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				27613A2D26201B6600E7273E /* Debug */,
-				27613A2E26201B6600E7273E /* Release */,
+				278E66892622C10600ABF178 /* Debug */,
+				278E668A2622C10600ABF178 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		27613A2F26201B6600E7273E /* Build configuration list for PBXNativeTarget "FoodTracker" */ = {
+		278E668B2622C10600ABF178 /* Build configuration list for PBXNativeTarget "BookHound" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				27613A3026201B6600E7273E /* Debug */,
-				27613A3126201B6600E7273E /* Release */,
+				278E668C2622C10600ABF178 /* Debug */,
+				278E668D2622C10600ABF178 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		27613A3226201B6600E7273E /* Build configuration list for PBXNativeTarget "FoodTrackerTests" */ = {
+		278E668E2622C10600ABF178 /* Build configuration list for PBXNativeTarget "BookHoundTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				27613A3326201B6600E7273E /* Debug */,
-				27613A3426201B6600E7273E /* Release */,
+				278E668F2622C10600ABF178 /* Debug */,
+				278E66902622C10600ABF178 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
-		27613A3526201B6600E7273E /* Build configuration list for PBXNativeTarget "FoodTrackerUITests" */ = {
+		278E66912622C10600ABF178 /* Build configuration list for PBXNativeTarget "BookHoundUITests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
-				27613A3626201B6600E7273E /* Debug */,
-				27613A3726201B6600E7273E /* Release */,
+				278E66922622C10600ABF178 /* Debug */,
+				278E66932622C10600ABF178 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
 	};
-	rootObject = 27613A0226201B6500E7273E /* Project object */;
+	rootObject = 278E665E2622C10300ABF178 /* Project object */;
 }
