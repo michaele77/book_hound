@@ -765,7 +765,7 @@ if __name__ == "__main__":
     ## SQL Time ##
     ##############
 
-    conn = sqlite3.connect('bookhound_graphtest_3.db')
+    conn = sqlite3.connect('bookhound_database_graph.db')
     c = conn.cursor()
 
     build_database = input('Do you want to build up the database? (1 for yes)')

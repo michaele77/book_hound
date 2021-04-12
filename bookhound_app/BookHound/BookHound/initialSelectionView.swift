@@ -10,37 +10,73 @@ import SwiftUI
 struct initialSelectionView: View {
     // initialSelectorView class parameters
     @State var user_input = ""
+    @State var printString = ""
     let header_string =
         "What are your favorite books?"
     let sub_header_string =
         "(You can enter more than one!)"
     
+    let dbManager = DBManager()
+    
     
     var body: some View {
 //        Text(/*@START_MENU_TOKEN@*/"Hello, World!"/*@END_MENU_TOKEN@*/)
         
-        VStack(alignment: .leading) {
-            
-            Spacer()
+        
+        
+        NavigationView {
+            VStack(alignment: .leading) {
+                
+                Spacer()
 
-            Text(header_string)
-                .bold()
-                .padding(.horizontal)
-                .font(.system(size: 25))
-            Text(sub_header_string)
-                .padding(.horizontal)
-            TextField("Enter book name...", text: $user_input)
-                .textFieldStyle(RoundedBorderTextFieldStyle())
-                .padding(.horizontal)
+                Text(header_string)
+                    .bold()
+                    .padding(.horizontal)
+                    .font(.system(size: 25))
+                Text(sub_header_string)
+                    .padding(.horizontal)
+                TextField("Enter book name...", text: $user_input)
+                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .padding(.horizontal)
+                
+                Spacer()
+                Spacer()
+                Spacer()
+                
+                
+                NavigationLink(
+                    destination: MainContentView()) {
+                    Text("To Engine >>")
+                        .font(.title)
+                        .padding(.horizontal)
+                        .foregroundColor(.white)
+                        .background(Color(
+                        UIColor.systemBlue))
+                        .cornerRadius(20)
+                        .frame(maxWidth: .infinity)
+                    
+                }
+                
+                
+                Button(action: {
+                    printString = String(dbManager.readSQLTable(bookID: 3))
+//                    printString = dbManager.dbPath
+                    
+                    
+//                    dbManager.printPath()
+                }) {
+                    Text("Debug button")
+                }
+                
+                Text("DEBUG PRINT: " + printString)
             
-            Spacer()
-            Spacer()
-            Spacer()
-            Spacer()
-            
-            Text("DEBUG PRINT: " + user_input)
+            }
+                
             
         }
+        
+        
+
     }
 }
 
