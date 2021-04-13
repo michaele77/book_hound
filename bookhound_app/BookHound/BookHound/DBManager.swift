@@ -22,11 +22,15 @@ class DBManager {
         print(dbPath)
     }
     
-    func readSQLTable(bookID: Int) -> Int {
+    func readSQLTable(bookID: Int) -> Binding? {
         do {
 //            return -2
-            var rawNum = try dconn.scalar("SELECT count(*) FROM customers")
-            return State(initialValue: rawNum.wrappedValue)
+//            var rawNum = try dconn.scalar("SELECT count(*) FROM customers")
+            for printVal in try dconn.scalar("SELECT count(*) FROM customers") {
+                print(prinVal[0])
+            }
+            return rawNum
+//            return State(initialValue: rawNum.wrappedValue)
             
         } catch {
             return -1
