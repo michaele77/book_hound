@@ -57,9 +57,8 @@ struct initialSelectionView: View {
                     
                 }
                 
-                
                 Button(action: {
-                    printString = String(dbManager.readSQLTable(bookID: 3))
+                    printString = String(dbManager.countRows())
 //                    printString = dbManager.dbPath
                     
                     
