@@ -63,38 +63,68 @@ def identify_master_book(repeat_list):
 
 #### MONGO DB FUNCTIONS ######
 
+def Mongo_check_existance(id_string, ID_to_check):
+    if id_string == 'users':
+        query = { "_id": ID_to_check }
+        mydoc = userCol.find(query)
+        for i in mydoc:
+            return True
+        else:
+            return False
+
+    else:
+        Exception("update function 'Mongo_check_existance' to include other checks!!")
+
+
 def Mongo_add_book_node(book_node):
     global global_book_errors
-    ID = book_node.ID
-    title = book_node.title
-    href = book_node.href
-    author = book_node.author
-    meta = book_node.meta
-    details = book_node.details
-    series = book_node.series
-    summary = book_node.summary
-    im_src = book_node.imageSource
-    im_bin = book_node.imageBinary
-    full_param = book_node.has_full_params
-    fk_linker = 'b_linker_' + str(ID)
-    fk_genres = ID  ## Should this be something else??
+    book_raters = [i[0].ID for i in book_node.raters]
+    rater_ratings = [i[1] for i in book_node.raters]
+    bookJSON = {"_id": book_node.ID, "title": book_node.title, "href": book_node.href, "author": book_node.author, \
+              "meta": book_node.meta, "details": book_node.details, "series": book_node.series, \
+              "summary": book_node.summary, "imageSource": book_node.imageSource, "imageBinary": book_node.imageBinary, \
+              "fullParameter": book_node.has_full_params, "ratersID": book_raters, "ratersRating": rater_ratings}
 
     try:
-      c.execute("INSERT INTO books VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
-                (ID, title, href, author, meta, details, series, summary, im_src, im_bin, full_param, fk_linker,
-                 fk_genres))
-      # print("Success adding: {0}".format(title))
-    except sqlite3.Error as er:
-      print('error occured on adding {0}!'.format(title))
-      print_error(er)
+      x = bookCol.insert_one(bookJSON)
+    except:
+      print('error occured on adding {0}!'.format(book_node.title))
       global_book_errors += 1
 
 
-def Mongo_add_user_node_list(raters_for_book):
-    pass
+def Mongo_add_user_node_list(user_list):
+    for cur_user in user_list:
+      ## First check if the user is already in DB
+      ## IF not, then add it
+      if Mongo_check_existance('users', cur_user.ID):
+        continue
+      else:
+        Mongo_add_user_node(cur_user)
 
-def Mongo_add_user_node(this_book):
-    pass
+def Mongo_add_user_node(user_node):
+    global global_book_errors
+    user_books = [i[0].ID for i in user_node.books]
+    rater_ratings = [i[1] for i in user_node.books]
+    userSON = {"_id": user_node.ID, "name": user_node.name, "link": user_node.link, \
+                "ratingsLink": user_node.ratingsLink, "booksID": user_books, "raterRatings": rater_ratings}
+
+    try:
+      x = userCol.insert_one(userSON)
+    except:
+      print('error occured on adding {0}!'.format(user_node.name))
+      global_book_errors += 1
+
+
+
+def Mongo_first_order_search(book_id):
+    query = {"_id": book_id}
+    book_JSON = [*bookCol.find(query)]
+
+    ## Now that we have the book JSON, go through and find all of the users linked to the book and get their JSON
+    ## For each of the users, look at their linked users' books, and store those books in a dictionary
+    ## Accumulate rating value in that dictionary
+    ## At the end, sort the dicionary and return highest value book (besides this one)
+
 
 
 
@@ -102,28 +132,28 @@ def Mongo_add_user_node(this_book):
 #                                  PreMAIN                                    #
 #-----------------------------------------------------------------------------#
 
-
-myclient = pymongo.MongoClient("mongodb://localhost:27017/")
-mydb = myclient["mydatabase"]
-mycol = mydb["books"]
-
-addStuff = False
-
-if addStuff:
-    mylist = { "_id": book_node.ID, "title": book_node.title, "href": book_node.href, "author": book_node.author, \
-        "meta": book_node.meta, "details": book_node.details, "series": book_node.series, \
-        "summary": book_node.summary, "imageSource": book_node.imageSource, "imageBinary": book_node.imageBinary, \
-        "fullParameter": book_node.has_full_params}
-
-
-    x = mycol.insert_one(mylist)
-    #print list of the _id values of the inserted documents:
-    print(x.inserted_ids)
-    x = mycol.find_one()
-    print(x)
-
-
-
+#
+# myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+# mydb = myclient["mydatabase"]
+# mycol = mydb["books"]
+#
+# addStuff = False
+#
+# if addStuff:
+#     mylist = { "_id": book_node.ID, "title": book_node.title, "href": book_node.href, "author": book_node.author, \
+#         "meta": book_node.meta, "details": book_node.details, "series": book_node.series, \
+#         "summary": book_node.summary, "imageSource": book_node.imageSource, "imageBinary": book_node.imageBinary, \
+#         "fullParameter": book_node.has_full_params}
+#
+#
+#     x = mycol.insert_one(mylist)
+#     #print list of the _id values of the inserted documents:
+#     print(x.inserted_ids)
+#     x = mycol.find_one()
+#     print(x)
+#
+#
+#
 
 # if addStuff:
 #   mylist = [
@@ -151,8 +181,8 @@ if addStuff:
 #
 
 
-for x in mycol.find():
-  print(x)
+# for x in mycol.find():
+#   print(x)
 
 
 
@@ -361,15 +391,20 @@ if __name__ == "__main__":
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~## MongoDB Time!! ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                     ####################
 
-    dbName =
+    dbName = "bookhound_proto_2"
+    myclient = pymongo.MongoClient("mongodb://localhost:27017/")
+    mydb = myclient[dbName]
+
+    bookCol = mydb["books"]
+    userCol = mydb["users"]
 
     ## Create database
 
     build_database = input('Do you want to build up the database? (1 for yes)')
     if build_database == str(1):
-        DB_type = input('What type of database? 1 for multi-table, 2 for edge-table graph approach')
+        DB_type = input('What type of database? 1 for normal Mongo DB')
 
-        if DB_type == str(2):
+        if DB_type == str(1):
 
             count_tracker = 0
             global_book_errors = 0
@@ -396,15 +431,23 @@ if __name__ == "__main__":
                 ## Then create a new linker table for this book
                 Mongo_add_user_node_list(raters_for_book)
 
-                SQL_add_graphEdge_rows(this_book.ID, this_book.raters)
-
-
             print("Done adding to prototype database!")
 
             print('We encountered {0} book node errors'.format(global_book_errors))
             print('We encountered {0} linker duplicate errors! See the list of IDs printed below:'.format(
                 global_linker_errors))
             print(global_blinker_tracker)
+
+    else:
+
+        ## Here if we don't want to rebuild the table
+        ## First count up total number of books and users
+        DB_books = [*bookCol.find()]
+        DB_users = [*userCol.find()]
+
+        print('We have {0} books and {1} users in the database'.format(len(DB_books), len(DB_users)))
+        x = Mongo_first_order_search(3)
+
 
 
                                     ####################
