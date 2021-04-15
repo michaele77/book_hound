@@ -117,15 +117,37 @@ def Mongo_add_user_node(user_node):
 
 
 def Mongo_first_order_search(book_id):
-    query = {"_id": book_id}
-    book_JSON = [*bookCol.find(query)]
+    book_JSON = Mongo_get_book_JSON(book_id)
 
     ## Now that we have the book JSON, go through and find all of the users linked to the book and get their JSON
     ## For each of the users, look at their linked users' books, and store those books in a dictionary
     ## Accumulate rating value in that dictionary
     ## At the end, sort the dicionary and return highest value book (besides this one)
+    userID_list = book_JSON['ratersID']
+    userRatings_list = book_JSON['ratersRating']
+
+    first_order_dict = {}
+    for i, curUserID in enumerate(userID_list):
+        if i % 100 == 0:
+            print(i)
+
+        user_JSON = Mongo_get_user_JSON(curUserID)
+
+        booksID_list = user_JSON['booksID']
+        booksRatings_list = user_JSON['raterRatings']
+
+        for j, curBookID in enumerate(booksID_list):
+            first_order_dict[curBookID] = first_order_dict.get(curBookID, 0) + userRatings_list[i]*booksRatings_list[j]
+
+    sorted_IDs = sorted(first_order_dict.keys(), key = first_order_dict.get, reverse = True)
+    return Mongo_get_book_JSON(sorted_IDs[1])
 
 
+def Mongo_get_book_JSON(book_id):
+    return [*bookCol.find({"_id": book_id})][0]
+
+def Mongo_get_user_JSON(user_id):
+    return [*userCol.find({"_id": user_id})][0]
 
 
 #-----------------------------------------------------------------------------#
@@ -447,6 +469,19 @@ if __name__ == "__main__":
 
         print('We have {0} books and {1} users in the database'.format(len(DB_books), len(DB_users)))
         x = Mongo_first_order_search(3)
+        print("Closest book to HP is {0}".format(x['title']))
+
+        x = Mongo_first_order_search(1846017)
+        print("Closest book to City of Saints and Madmen is {0}".format(x['title']))
+
+        x = Mongo_first_order_search(1)
+        print("Closest book to HP half blood prince is {0}".format(x['title']))
+
+        x = Mongo_first_order_search(49529403)
+        print("Closest book to PAris Adrift is {0}".format(x['title']))
+
+        x = Mongo_first_order_search(186074)
+        print("Closest book to The name of the wind is {0}".format(x['title']))
 
 
 
