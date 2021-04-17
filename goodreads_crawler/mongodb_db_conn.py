@@ -416,6 +416,7 @@ if __name__ == "__main__":
     dbName = "bookhound_proto_2"
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient[dbName]
+    print("Got it")
 
     bookCol = mydb["books"]
     userCol = mydb["users"]
