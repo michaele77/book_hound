@@ -12,14 +12,60 @@ var usersModel = modelVars.usersModel
 const mySecretIP = require('./personal_IP')
 
 
-// Create our mongoose connection
-// Throw an error if fails to connect
-mongoose.connect('mongodb://localhost/bookhound_proto_2') // Come back and check if this DB name is correct
-mongoose.connection.once('open', function() {
-    console.log('connected to boohound database!')
-}).on('error', function(error) {
-    console.log('Failed to connect! See error ~~  ' + error)
-})
+// // Create our mongoose connection
+// // Throw an error if fails to connect
+// mongoose.connect('mongodb://localhost:27017/bookhound_proto_2') // Come back and check if this DB name is correct
+// mongoose.connection.once('open', function() {
+//     console.log('connected to boohound database!')
+// }).on('error', function(error) {
+//     console.log('Failed to connect! See error ~~  ' + error)
+// })
+
+
+// var action = function (err, collection) {
+//     // Locate all the entries using find
+//     collection.find({'_id':'b'}).toArray(function(err, results) {
+//         /* whatever you want to do with the results in node such as the following
+//              res.render('home', {
+//                  'title': 'MyTitle',
+//                  'data': results
+//              });
+//         */
+//     });
+// };
+
+// mongoose.connection.db.collection('question', action);
+
+
+
+var MongoClient = require('mongodb').MongoClient
+// Define global variables
+var booksColl, userColl, db
+
+// Connect to the db
+MongoClient.connect("mongodb://localhost", function (err, client) {
+   
+     if(err) throw err;
+
+     db = client.db('bookhound_proto_2')
+     console.log('connected to boohound database!')
+
+     booksColl = db.collection('books')
+     userColl = db.collection('users')
+
+
+     //Write databse Insert/Update/Query code here..
+     
+                
+});
+
+
+
+
+
+
+
+
 
 
 // --------------- Server API Functions below! --------------- //
@@ -29,11 +75,11 @@ mongoose.connection.once('open', function() {
 // READ A BOOK BY ID
 // GET request
 app.get('/fetch', function(req, res) {
-    booksModel.find({}).then( function(DBitems) {
-        res.send(DBitems) // Send whatever mongoose finds in the mongoDB
+    booksColl.findOne({_id: 3}).then( function(dbItems) {
+        res.send(dbItems) // Send whatever mongoose finds in the mongoDB
         console.log('Fetched book!')
     })
-})
+
 
 
 // READ A USER BY ID
