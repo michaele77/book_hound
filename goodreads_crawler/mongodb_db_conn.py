@@ -472,6 +472,19 @@ if __name__ == "__main__":
         x = Mongo_first_order_search(3)
         print("Closest book to HP is {0}".format(x['title']))
 
+        ## Now let's calculate the average number of books each user has
+        users_avgBookNum = [len(i['booksID']) for i in DB_users]
+        avgBookNum = sum(users_avgBookNum) / len(users_avgBookNum)
+        print("Users have on average {0} books linked!".format(avgBookNum))
+        print("Worst case user has {0} books linked".format(max(users_avgBookNum)))
+
+        ## Let's also calculate the average number of users each book has (should be around 100 originally)
+        books_avgUserNum = [len(i['ratersID']) for i in DB_books]
+        avgUserNum = sum(books_avgUserNum) / len(books_avgUserNum)
+        print("Books have on average {0} users linked!".format(avgUserNum))
+        print("Worst case book has {0} users linked".format(max(books_avgUserNum)))
+
+
         x = Mongo_first_order_search(1846017)
         print("Closest book to City of Saints and Madmen is {0}".format(x['title']))
 
