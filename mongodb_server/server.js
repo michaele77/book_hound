@@ -87,6 +87,47 @@ app.get('/fetchUser', function(req, res) {
 
 
 
+async function asyncFindFirstOrder(bookID) {
+
+    let masterUserArr, masterUserRatingsArr
+    let masterArr = []
+    var dbItems = await booksColl.findOne({_id: bookID})
+    // var dbItems = await query.exec()
+
+    masterUserArr = dbItems.ratersID
+    masterUserRatingsArr = dbItems.ratersRating
+
+
+    // We have the user and raters IDs
+    // We iterate through each user and get their books
+    // Then concatenate the original user ID, their book ID, and the 2 ratings multiplied in an Array
+    let curUsr, rating_usr2book, rating_book2usr, curBookArr, tmpRating
+    for (let indx in masterUserArr) {
+        // Iterate through masterUserArr and masterUserRatingsArr using indx as iterating var
+        curUsr = masterUserArr[indx]
+        rating_book2usr = masterUserRatingsArr[indx]
+        curBookArr = []
+        rating_usr2book = null
+
+
+        dbItems = await userColl.findOne({_id: curUsr})
+        // dbItems = await query.exec()
+
+        curBookArr = dbItems.booksID
+        rating_usr2book = dbItems.raterRatings
+
+        // Now iterate through the array of books for each user
+        // At each iteration in this inner loop, add to the 
+        for (let bIndx in curBookArr) {
+            tmpRating = rating_book2usr * rating_usr2book[bIndx]
+            masterArr.push( [curUsr, curBookArr[bIndx], tmpRating] )
+        }
+
+    }
+    return masterArr
+
+}
+
 
 
 // GENERATE FIRST-ORDER BOOKS LIST 
@@ -107,77 +148,83 @@ app.get('/fetchUser', function(req, res) {
 //     2) book ID
 //     3) rating
 // With these 3 things, the swift App can easily use its own user tables to calculate the true match score
-app.get('/fetchFirstOrder', function(req, res) {
+app.get('/fetchFirstOrder', async function(req, res) {
     try {
         const queryObj = url.parse(req.url,true).query
         const bookID = Number(queryObj['bookID'])
-        // console.log('got book ID in func')
-        // Let's get the users for this book
-        var og_userList, bookJSON
-        // console.log('right before')
 
-        let masterUserArr
-        let masterUserRatingsArr = null
-        let masterArr = []
+        let bigArr = await asyncFindFirstOrder(bookID)
+        console.log('we here mate')
+        console.log(bigArr.length)
+        res.send(bigArr)
+        console.log('we after async!')
 
-        const query = booksColl.findOne({_id: bookID});
-        console.log('1')
-        const dbItems = await query.exec();
-        masterUserArr = dbItems.ratersID
-        masterUserRatingsArr = dbItems.ratersRating
-        // booksColl.findOne({_id: bookID}, function(err, dbItems) {
+
+        // let masterUserArr
+        // let masterUserRatingsArr = null
+        // let masterArr = []
+
+        // // const query = booksColl.findOne({_id: bookID});
+        // // console.log('1')
+        // // const dbItems = await query.exec();
+        // // masterUserArr = dbItems.ratersID
+        // // masterUserRatingsArr = dbItems.ratersRating
+        // booksColl.findOne({_id: bookID}).then(function(dbItems) {
         //     // console.log('found one!')
         //     // console.log(dbItems)
         //     masterUserArr = dbItems.ratersID
         //     masterUserRatingsArr = dbItems.ratersRating
 
         //     console.log(masterUserArr)
-            
-        //     // console.log(typeof bookJSON )
-        //     // console.log(Array.isArray(bookJSON))
 
-        //     // res.send(masterUserArr.concat(masterUserRatingsArr))
+
+
+        //     console.log('2')
+
+        //     // We have the user and raters IDs
+        //     // We iterate through each user and get their books
+        //     // Then concatenate the original user ID, their book ID, and the 2 ratings multiplied in an Array
+        //     let curUsr, rating_usr2book, rating_book2usr, curBookArr, tmpRating
+        //     for (let indx in masterUserArr) {
+        //         console.log('indx is ' + indx)
+        //         // Iterate through masterUserArr and masterUserRatingsArr using indx as iterating var
+        //         curUsr = masterUserArr[indx]
+        //         rating_book2usr = masterUserRatingsArr[indx]
+        //         curBookArr = []
+        //         rating_usr2book = null
+
+
+        //         console.log('current user is ' + curUsr)
+        //         userColl.findOne({_id: curUsr}).then(function(dbItems) {
+        //             curBookArr = dbItems.booksID
+        //             rating_usr2book = dbItems.ratersRating
+
+        //             // Now iterate through the array of books for each user
+        //             // At each iteration in this inner loop, add to the 
+        //             for (let bIndx in curBookArr) {
+        //                 console.log('bindx is ' + bIndx)
+        //                 tmpRating = rating_book2usr * rating_usr2book[bIndx]
+        //                 console.log(bIndx)
+        //                 console.log(tmpRating)
+        //                 masterArr.push( [curUsr, curBookArr[bIndx], tmpRating] )
+        //             }
+
+
+        //         })
+                
+            
+
+                
+        //     }
+
+        //     res.send('whats up!')
+
+
             
         // })
        
 
-        console.log('2')
-
-        // masterUserArr = [77,100]
-        // masterUserRatingsArr = [3,5]
-
-        // We have the user and raters IDs
-        // We iterate through each user and get their books
-        // Then concatenate the original user ID, their book ID, and the 2 ratings multiplied in an Array
-        let curUsr, rating_usr2book, rating_book2usr, curBookArr, tmpRating
-        for (let indx in masterUserArr) {
-            console.log('Fetched original books users!')
-            // Iterate through masterUserArr and masterUserRatingsArr using indx as iterating var
-            curUsr = masterUserArr[indx]
-            rating_book2usr = masterUserRatingsArr[indx]
-            curBookArr = []
-            rating_usr2book = null
-
-            userColl.findOne({_id: curUsr}, function(err, dbItems) {
-                curBookArr = dbItems.booksID
-                rating_usr2book = dbItems.ratersRating
-            })
-            
-            // Loop to handle asynchronous BS of the findOne function
-            while (rating_usr2book == null) {}
-
-
-            // Now iterate through the array of books for each user
-            // At each iteration in this inner loop, add to the 
-            for (let bIndx in curBookArr) {
-                tmpRating = rating_book2usr * rating_usr2book[bIndx]
-                console.log(bIndx)
-                console.log(tmpRating)
-                masterArr.push( [curUsr, curBookArr[bIndx], tmpRating] )
-            }
-        }
-
-        res.send('whats up!')
+        
 
         // res.send(-88)
         // res.send(masterArr)
