@@ -1,6 +1,6 @@
 const express = require('express')
-const mongoose = require('mongoose')
 var app = express()
+const url = require('url')
 
 // Import the models defined in bookhoundSchema 
 // Have 2 schema types so need to import both of them
@@ -10,32 +10,6 @@ var usersModel = modelVars.usersModel
 
 // Import secret personal IP address so it's not exposed on github
 const mySecretIP = require('./personal_IP')
-
-
-// // Create our mongoose connection
-// // Throw an error if fails to connect
-// mongoose.connect('mongodb://localhost:27017/bookhound_proto_2') // Come back and check if this DB name is correct
-// mongoose.connection.once('open', function() {
-//     console.log('connected to boohound database!')
-// }).on('error', function(error) {
-//     console.log('Failed to connect! See error ~~  ' + error)
-// })
-
-
-// var action = function (err, collection) {
-//     // Locate all the entries using find
-//     collection.find({'_id':'b'}).toArray(function(err, results) {
-//         /* whatever you want to do with the results in node such as the following
-//              res.render('home', {
-//                  'title': 'MyTitle',
-//                  'data': results
-//              });
-//         */
-//     });
-// };
-
-// mongoose.connection.db.collection('question', action);
-
 
 
 var MongoClient = require('mongodb').MongoClient
@@ -66,24 +40,52 @@ MongoClient.connect("mongodb://localhost", function (err, client) {
 
 
 
-
-
 // --------------- Server API Functions below! --------------- //
 // Note: We have no POST requests here! We have generated our database through webscraping already!
 
 
+
 // READ A BOOK BY ID
 // GET request
-app.get('/fetch', function(req, res) {
-    booksColl.findOne({_id: 3}).then( function(dbItems) {
-        res.send(dbItems) // Send whatever mongoose finds in the mongoDB
-        console.log('Fetched book!')
-    })
+// URL must be of ID type: bookID = x, where x is required book ID
+app.get('/fetchBook', function(req, res) {
+    // const urlArr = req.url.split('?')
+    // const singleArg = urlArr[urlArr.length - 1]
+
+    try {
+        const queryObj = url.parse(req.url,true).query
+        const bookID = Number(queryObj['bookID'])
+        booksColl.findOne({_id: bookID}).then( function(dbItems) {
+            res.send(dbItems) // Send whatever mongoose finds in the mongoDB
+            console.log('Fetched book ' + String(bookID) + '!')
+        })
+    } catch(err) {
+        next(err)
+    }
+
+    
+})
 
 
 
 // READ A USER BY ID
 // GET request
+// URL must be of ID type: userID = x, where x is required user ID
+app.get('/fetchUser', function(req, res) {
+    try {
+        const queryObj = url.parse(req.url,true).query
+        const userID = Number(queryObj['userID'])
+        userColl.findOne({_id: userID}).then( function(dbItems) {
+            res.send(dbItems) // Send whatever mongoose finds in the mongoDB
+            console.log('Fetched user ' + String(userID) + '!')
+        })
+    } catch(err) {
+        next(err)
+    }
+
+})
+
+
 
 
 
@@ -100,8 +102,45 @@ app.get('/fetch', function(req, res) {
 //      -On average     ~791 book IDs       --> ~6kB of data
 //      -In worst case  ~894,645 book IDs   --> ~7MB of data
 
+app.get('/fetchFirstOrder', function(req, res) {
+    try {
+        const queryObj = url.parse(req.url,true).query
+        const userID = Number(queryObj['userID'])
+        userColl.findOne({_id: userID}).then( function(dbItems) {
+            res.send(dbItems) // Send whatever mongoose finds in the mongoDB
+            console.log('Fetched user yikes!')
+        })
+    } catch(err) {
+        next(err)
+    }
+
+})
 
 
-var server = app.listen(8081, mySecretIP, function() {
+
+
+
+app.use((req, res, next) => {
+    const error = new Error("Not found");
+    error.status = 404;
+    next(error);
+    console.log('Requested routine not found, sent 404')
+  });
+  
+  // error handler middleware
+  app.use((error, req, res, next) => {
+    console.log('Middleware error handler entree')
+      res.status(error.status || 500).send({
+        error: {
+          status: error.status || 500,
+          message: error.message || 'Internal Server Error',
+        },
+      });
+    });
+
+
+
+// Exclude the IP to allow external IPs from outside the network
+var server = app.listen(8084, mySecretIP, function() {
     console.log('Server is up and running!')
 })
