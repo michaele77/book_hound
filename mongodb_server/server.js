@@ -102,14 +102,89 @@ app.get('/fetchUser', function(req, res) {
 //      -On average     ~791 book IDs       --> ~6kB of data
 //      -In worst case  ~894,645 book IDs   --> ~7MB of data
 
+// Create a triple list for every book-user pair which contains:
+//     1) user ID
+//     2) book ID
+//     3) rating
+// With these 3 things, the swift App can easily use its own user tables to calculate the true match score
 app.get('/fetchFirstOrder', function(req, res) {
     try {
         const queryObj = url.parse(req.url,true).query
-        const userID = Number(queryObj['userID'])
-        userColl.findOne({_id: userID}).then( function(dbItems) {
-            res.send(dbItems) // Send whatever mongoose finds in the mongoDB
-            console.log('Fetched user yikes!')
-        })
+        const bookID = Number(queryObj['bookID'])
+        // console.log('got book ID in func')
+        // Let's get the users for this book
+        var og_userList, bookJSON
+        // console.log('right before')
+
+        let masterUserArr
+        let masterUserRatingsArr = null
+        let masterArr = []
+
+        const query = booksColl.findOne({_id: bookID});
+        console.log('1')
+        const dbItems = await query.exec();
+        masterUserArr = dbItems.ratersID
+        masterUserRatingsArr = dbItems.ratersRating
+        // booksColl.findOne({_id: bookID}, function(err, dbItems) {
+        //     // console.log('found one!')
+        //     // console.log(dbItems)
+        //     masterUserArr = dbItems.ratersID
+        //     masterUserRatingsArr = dbItems.ratersRating
+
+        //     console.log(masterUserArr)
+            
+        //     // console.log(typeof bookJSON )
+        //     // console.log(Array.isArray(bookJSON))
+
+        //     // res.send(masterUserArr.concat(masterUserRatingsArr))
+            
+        // })
+       
+
+        console.log('2')
+
+        // masterUserArr = [77,100]
+        // masterUserRatingsArr = [3,5]
+
+        // We have the user and raters IDs
+        // We iterate through each user and get their books
+        // Then concatenate the original user ID, their book ID, and the 2 ratings multiplied in an Array
+        let curUsr, rating_usr2book, rating_book2usr, curBookArr, tmpRating
+        for (let indx in masterUserArr) {
+            console.log('Fetched original books users!')
+            // Iterate through masterUserArr and masterUserRatingsArr using indx as iterating var
+            curUsr = masterUserArr[indx]
+            rating_book2usr = masterUserRatingsArr[indx]
+            curBookArr = []
+            rating_usr2book = null
+
+            userColl.findOne({_id: curUsr}, function(err, dbItems) {
+                curBookArr = dbItems.booksID
+                rating_usr2book = dbItems.ratersRating
+            })
+            
+            // Loop to handle asynchronous BS of the findOne function
+            while (rating_usr2book == null) {}
+
+
+            // Now iterate through the array of books for each user
+            // At each iteration in this inner loop, add to the 
+            for (let bIndx in curBookArr) {
+                tmpRating = rating_book2usr * rating_usr2book[bIndx]
+                console.log(bIndx)
+                console.log(tmpRating)
+                masterArr.push( [curUsr, curBookArr[bIndx], tmpRating] )
+            }
+        }
+
+        res.send('whats up!')
+
+        // res.send(-88)
+        // res.send(masterArr)
+
+
+        // console.log(bookJSON)
+
     } catch(err) {
         next(err)
     }
