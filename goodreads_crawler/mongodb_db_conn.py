@@ -83,7 +83,10 @@ def Mongo_add_book_node(book_node):
     bookJSON = {"_id": book_node.ID, "title": book_node.title, "href": book_node.href, "author": book_node.author, \
               "meta": book_node.meta, "details": book_node.details, "series": book_node.series, \
               "summary": book_node.summary, "imageSource": book_node.imageSource, "imageBinary": book_node.imageBinary, \
-              "fullParameter": book_node.has_full_params, "ratersID": book_raters, "ratersRating": rater_ratings}
+              "fullParameter": book_node.has_full_params, "ratersID": book_raters, "ratersRating": rater_ratings, \
+              "genres": 0}
+                ## Note: we have a placeholder for genres here just so it dont get lonely...
+
 
     try:
       x = bookCol.insert_one(bookJSON)
@@ -413,7 +416,7 @@ if __name__ == "__main__":
     #~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~## MongoDB Time!! ## ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
                                     ####################
 
-    dbName = "bookhound_proto_2"
+    dbName = "bookhound_mongodb_toMend"
     myclient = pymongo.MongoClient("mongodb://localhost:27017/")
     mydb = myclient[dbName]
     print("Got it")
@@ -443,6 +446,9 @@ if __name__ == "__main__":
                     print('     -->we have encountered {0} linker errors so far'.format(global_linker_errors))
                     print('     -->have seen {0} edges so far'.format(global_numberOfEdges))
                 count_tracker += 1
+
+                if this_book.has_full_params != 0:
+                    print('got a full parameter book!')
 
                 Mongo_add_book_node(this_book)
 
