@@ -23,6 +23,7 @@ from bs4 import SoupStrainer
 from selenium import webdriver
 import requests
 import pymongo
+from datetime import datetime
 
 #-----------------------------------------------------------------------------#
 #                             GLOBAL DEFINES                                  #
@@ -63,8 +64,8 @@ def get_page(fnc_url_link):
 
     ##Below is the old code that WORKED
     driver.get(fnc_url_link)
-    soup_toreturn = BeautifulSoup(driver.page_source, 'lxml')
 
+    soup_toreturn = BeautifulSoup(driver.page_source, 'html.parser')
     time.sleep(1)
 
     return soup_toreturn
@@ -83,13 +84,16 @@ def get_genre_list(book_info):
     # Note that string and href could be lists in case of super genres
 
     element_list = soup.select('.elementList')
-    element_list.pop(0) # Clear out the first garbage entree
+    # element_list.pop(0) # Clear out the first garbage entree
 
-    try:
-        temp_x = element_list[0].contents[3].contents[1].contents[0]
-    except:
-        print('First element is garbage (again)')
-        element_list.pop(0)
+    while True:
+        try:
+            temp_x = element_list[0].contents[3].contents[1].contents[0]
+            ## If we were able to retrieve the info, break out
+            break
+        except:
+            print('     -->First element is garbage')
+            element_list.pop(0)
 
 
     output_list = []
@@ -122,6 +126,13 @@ def get_genre_list(book_info):
 
 
 
+def Mongo_get_book_JSON(book_id):
+    return [*bookCol.find({"_id": book_id})][0]
+
+def Mongo_get_user_JSON(user_id):
+    return [*userCol.find({"_id": user_id})][0]
+
+
 # -----------------------------------------------------------------------------#
 #                                   MAIN                                       #
 # -----------------------------------------------------------------------------#
@@ -152,14 +163,37 @@ if __name__ == "__main__":
     DB_books = [*bookCol.find()]
     DB_users = [*userCol.find()]
 
-    ## Now we can loop through every book ID
-    for curBook in DB_books:
+    checkList = []
 
-        if curBook['fullParameter'] == 0 or curBook['fullParameter'] == 1 or curBook['fullParameter'] == False:
+    ## BEFORE WE LOOP, let's sort through all of the books by order of users pointing to them!
+    ## That way we can take care of the most popular books first
+
+    print("Will start sorting now")
+    DB_books.sort(key=lambda x:len(x['ratersID']), reverse=True)
+    print("finished sorting")
+    print("Testing sorting! First book in popularity is {0}".format(DB_books[0]['title']))
+    print("Testing sorting! Last book in popularity is {0}".format(DB_books[-1]['title']))
+
+    notCloseFlag = True
+    ## Now we can loop through every book ID
+    for i, curBook in enumerate(DB_books):
+        # if curBook['fullParameter'] == 1:
+        #     print("Got a full param book!")
+
+
+        if 'dateUpdated' not in curBook.keys():
             print('scraping book {0}'.format(curBook['title']))
             ID_toScrape = curBook["_id"]
             book_reference_number = int(ID_toScrape)
             soup = get_page(url_location + str(book_reference_number))
+            if notCloseFlag:
+                # Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
+                time.sleep(.5)
+                close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
+                element = driver.find_element_by_xpath(close_XPATH)
+                element.click()
+                notCloseFlag = False
+                time.sleep(2)
 
             # Get general book info
             book_info = {}
@@ -181,6 +215,31 @@ if __name__ == "__main__":
             book_info['imageBinary'] = image_bits  # Actual image bitds
             book_info['genres'] = get_genre_list(book_info)  # Genre list
             book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
+
+            ## NOTE: Note sure will happen if thise grows too big...
+            ## Just check on it i guess?
+            checkList.append(book_info)
+
+            # ## Let's now append this stuff to our current database
+            # curBook['author']       = book_info['author']
+            # curBook['meta']         = book_info['meta']
+            # curBook['details']      = book_info['details']
+            # curBook['series']       = book_info['series']
+            # curBook['summary']      = book_info['summary']
+            # curBook['imageSource']  = book_info['imageSource']
+            # curBook['imageBinary']  = book_info['imageBinary']
+            # curBook['genres']       = book_info['genres']
+            # curBook['fullParameter']= True
+
+            myquery = {"_id": book_reference_number}
+            newvalues = {"$set": {"author": book_info['author'], "meta": book_info['meta'], \
+                                  "details": book_info['details'], "series": book_info['series'], \
+                                  "summary": book_info['summary'], "imageSource": book_info['imageSource'], \
+                                  "imageBinary": book_info['imageBinary'], "genres": book_info['genres'],
+                                  "fullParameter": True, "dateUpdated": datetime.now().strftime("%m/%d/%Y %H:%M:%S")}}
+
+            bookCol.update_one(myquery, newvalues)
+
 
 
         else:
