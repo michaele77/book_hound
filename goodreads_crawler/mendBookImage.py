@@ -24,6 +24,10 @@ from selenium import webdriver
 import requests
 import pymongo
 from datetime import datetime
+import random
+import pyautogui
+import pynput
+
 
 #-----------------------------------------------------------------------------#
 #                             GLOBAL DEFINES                                  #
@@ -66,7 +70,9 @@ def get_page(fnc_url_link):
     driver.get(fnc_url_link)
 
     soup_toreturn = BeautifulSoup(driver.page_source, 'html.parser')
-    time.sleep(1)
+    rand_adder = random.uniform(0,2) ## Wait an additional 0 to 10 seconds
+    print("Going to wait for {0} seconds".format(1+rand_adder))
+    time.sleep(1 + rand_adder)
 
     return soup_toreturn
 
@@ -133,6 +139,10 @@ def Mongo_get_user_JSON(user_id):
     return [*userCol.find({"_id": user_id})][0]
 
 
+def changeVPNLocation():
+
+
+
 # -----------------------------------------------------------------------------#
 #                                   MAIN                                       #
 # -----------------------------------------------------------------------------#
@@ -175,6 +185,7 @@ if __name__ == "__main__":
     print("Testing sorting! Last book in popularity is {0}".format(DB_books[-1]['title']))
 
     notCloseFlag = True
+    streakCount = 0
     ## Now we can loop through every book ID
     for i, curBook in enumerate(DB_books):
         # if curBook['fullParameter'] == 1:
@@ -187,19 +198,35 @@ if __name__ == "__main__":
             book_reference_number = int(ID_toScrape)
             soup = get_page(url_location + str(book_reference_number))
             if notCloseFlag:
-                # Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
-                time.sleep(.5)
-                close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
-                element = driver.find_element_by_xpath(close_XPATH)
-                element.click()
                 notCloseFlag = False
-                time.sleep(2)
+                try:
+                    # Now we need to close the popup that happens if we're not logged in...Find the close button by xpath:
+                    time.sleep(.5)
+                    close_XPATH = '/html/body/div[3]/div/div/div[1]/button/img'
+                    element = driver.find_element_by_xpath(close_XPATH)
+                    element.click()
+                    time.sleep(2)
+                except:
+                    print("guess there's no element to close...moving on!")
 
             # Get general book info
             book_info = {}
 
             book_info['ID'] = book_reference_number
-            book_info['title'] = soup.select('#bookTitle')[0].text.strip()  # book title
+            while True:
+                try:
+                    book_info['title'] = soup.select('#bookTitle')[0].text.strip()  # book title
+                    streakCount += 1
+                    break
+                except:
+                    print("     ~~~~Got rejected, waiting 5 seconds...")
+                    print("     ~~~~~~~~~~~~~~~~~Our streak lasted {0} books!".format(streakCount))
+                    if streakCount == 0:
+                        ## If we have hit a double rejection, then let's change locations
+                        changeVPNLocation()
+                    streakCount = 0
+                    time.sleep(5)
+                    soup = get_page(url_location + str(book_reference_number))
             book_info['author'] = soup.select('.authorName')[0].text.strip()  # author
             book_info['meta'] = soup.select('#bookMeta')[0].text.strip()  # book meta
             book_info['details'] = soup.select('#details')[0].text.strip()  # book details (stats)
@@ -207,12 +234,18 @@ if __name__ == "__main__":
             # Extra info added:
             book_info['series'] = soup.select('#bookSeries')[0].text.strip()  # book series
             book_info['summary'] = soup.select('#descriptionContainer')[0].text.strip()  # summary
-            book_info['imageSource'] = soup.select('#coverImage')[0].attrs['src']  # jpg asset link of book cover
+            try:
+                book_info['imageSource'] = soup.select('#coverImage')[0].attrs['src']  # jpg asset link of book cover
 
-            image_bits = extract_img(book_info['imageSource'])
-            save_img_file(book_info, image_bits)
+                image_bits = extract_img(book_info['imageSource'])
+                save_img_file(book_info, image_bits)
 
-            book_info['imageBinary'] = image_bits  # Actual image bitds
+                book_info['imageBinary'] = image_bits  # Actual image bitds
+            except:
+                print("     -----No book cover!")
+                book_info['imageSource'] = "NO_COVER_IMAGE"
+                book_info['imageBinary'] = "NO_COVER_IMAGE"
+
             book_info['genres'] = get_genre_list(book_info)  # Genre list
             book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
 
