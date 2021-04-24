@@ -26,7 +26,8 @@ import pymongo
 from datetime import datetime
 import random
 import pyautogui
-import pynput
+from pynput.keyboard import Key, Controller
+from config import get_VPN_password
 
 
 #-----------------------------------------------------------------------------#
@@ -44,6 +45,8 @@ chrome_options = webdriver.chrome.options.Options()
 # chrome_options.add_argument("--headless")
 driver = webdriver.Chrome(options=chrome_options)
 
+currJump = 0
+myKeyboard = Controller()
 
 #-----------------------------------------------------------------------------#
 #                                Functions                                    #
@@ -72,7 +75,7 @@ def get_page(fnc_url_link):
     soup_toreturn = BeautifulSoup(driver.page_source, 'html.parser')
     rand_adder = random.uniform(0,2) ## Wait an additional 0 to 10 seconds
     print("Going to wait for {0} seconds".format(1+rand_adder))
-    time.sleep(1 + rand_adder)
+    time.sleep(1)
 
     return soup_toreturn
 
@@ -139,7 +142,33 @@ def Mongo_get_user_JSON(user_id):
     return [*userCol.find({"_id": user_id})][0]
 
 
-def changeVPNLocation():
+def changeVPNLocation(inJump):
+    time.sleep(1)
+    thisPwordString = get_VPN_password()
+    x0 = 65
+    y0 = 156
+    y1 = 858 ## difference here is 27 jumps,
+    jumpDelta = (y1 - y0) / 27
+
+    currY = y0 + jumpDelta * inJump
+
+    ## Move our mouse to the new VPN location
+    pyautogui.moveTo(x0, currY)
+    time.sleep(1)
+
+    ## Click the mouse
+    pyautogui.click()
+    time.sleep(1)
+    #
+    # ## Now input the string into the popup that appears
+    # for thisChar in thisPwordString:
+    #     myKeyboard.press(thisChar)
+    #     myKeyboard.release(thisChar)
+    #     time.sleep(0.1)
+
+    ## Now we are done!
+    print("Done with vpn location change!")
+
 
 
 
@@ -223,7 +252,11 @@ if __name__ == "__main__":
                     print("     ~~~~~~~~~~~~~~~~~Our streak lasted {0} books!".format(streakCount))
                     if streakCount == 0:
                         ## If we have hit a double rejection, then let's change locations
-                        changeVPNLocation()
+                        if currJump < 26:  ## Might be able to increase this to 27
+                            currJump += 1
+                        else:
+                            currJump = 0
+                        changeVPNLocation(currJump)
                     streakCount = 0
                     time.sleep(5)
                     soup = get_page(url_location + str(book_reference_number))
@@ -246,7 +279,12 @@ if __name__ == "__main__":
                 book_info['imageSource'] = "NO_COVER_IMAGE"
                 book_info['imageBinary'] = "NO_COVER_IMAGE"
 
-            book_info['genres'] = get_genre_list(book_info)  # Genre list
+            try:
+                book_info['genres'] = get_genre_list(book_info)  # Genre list
+            except Exception:
+                print("     -----No genres!")
+                book_info['genres'] = "NO_GENRES"
+
             book_info['href'] = 'https://www.goodreads.com/book/show/' + str(book_info['ID'])
 
             ## NOTE: Note sure will happen if thise grows too big...

@@ -19,10 +19,7 @@
 		278E66A72624112C00ABF178 /* WantToReadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66A62624112C00ABF178 /* WantToReadView.swift */; };
 		278E66AC2624114200ABF178 /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66AB2624114200ABF178 /* SettingsView.swift */; };
 		278E66B1262419CF00ABF178 /* DBManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66B0262419CF00ABF178 /* DBManager.swift */; };
-		278E66B626241BF400ABF178 /* bookhound_database_golden.db in Resources */ = {isa = PBXBuildFile; fileRef = 278E66B526241BF300ABF178 /* bookhound_database_golden.db */; };
 		278E66BC262423A700ABF178 /* SQLite in Frameworks */ = {isa = PBXBuildFile; productRef = 278E66BB262423A700ABF178 /* SQLite */; };
-		278E66C126242AA000ABF178 /* chinook.db in Resources */ = {isa = PBXBuildFile; fileRef = 278E66C026242AA000ABF178 /* chinook.db */; };
-		278E66C6262561F600ABF178 /* bookhound_database_graph_1.db  in Resources */ = {isa = PBXBuildFile; fileRef = 278E66C5262561F600ABF178 /* bookhound_database_graph_1.db  */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -63,7 +60,7 @@
 		278E66B0262419CF00ABF178 /* DBManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DBManager.swift; sourceTree = "<group>"; };
 		278E66B526241BF300ABF178 /* bookhound_database_golden.db */ = {isa = PBXFileReference; lastKnownFileType = file; name = bookhound_database_golden.db; path = BookHound/bookhound_database_golden.db; sourceTree = "<group>"; };
 		278E66C026242AA000ABF178 /* chinook.db */ = {isa = PBXFileReference; lastKnownFileType = file; name = chinook.db; path = BookHound/chinook.db; sourceTree = "<group>"; };
-		278E66C5262561F600ABF178 /* bookhound_database_graph_1.db  */ = {isa = PBXFileReference; lastKnownFileType = file; name = "bookhound_database_graph_1.db "; path = "BookHound/bookhound_database_graph_1.db "; sourceTree = "<group>"; };
+		278E66C5262561F600ABF178 /* bookhound_database_graph_1.db  */ = {isa = PBXFileReference; lastKnownFileType = text; name = "bookhound_database_graph_1.db "; path = "BookHound/bookhound_database_graph_1.db "; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -268,9 +265,6 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				278E66C6262561F600ABF178 /* bookhound_database_graph_1.db  in Resources */,
-				278E66C126242AA000ABF178 /* chinook.db in Resources */,
-				278E66B626241BF400ABF178 /* bookhound_database_golden.db in Resources */,
 				278E66712622C10500ABF178 /* Preview Assets.xcassets in Resources */,
 				278E666E2622C10500ABF178 /* Assets.xcassets in Resources */,
 			);

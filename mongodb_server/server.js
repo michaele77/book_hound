@@ -21,7 +21,8 @@ MongoClient.connect("mongodb://localhost", function (err, client) {
    
      if(err) throw err;
 
-     db = client.db('bookhound_proto_2')
+    //  db = client.db('bookhound_proto_2')
+     db = client.db('bookhound_mongodb_toMend') // This is the newly included image DB!
      console.log('connected to boohound database!')
 
      booksColl = db.collection('books')

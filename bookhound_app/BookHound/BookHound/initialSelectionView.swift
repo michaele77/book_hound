@@ -16,7 +16,7 @@ struct initialSelectionView: View {
     let sub_header_string =
         "(You can enter more than one!)"
     
-    let dbManager = DBManager()
+//    let dbManager = DBManager()
     
     
     var body: some View {
@@ -58,7 +58,15 @@ struct initialSelectionView: View {
                 }
                 
                 Button(action: {
-                    printString = String(dbManager.countRows())
+                    if (printString == "") {
+                        printString = "XXX temporary string XXX"
+                    } else {
+                        printString = "1"
+                    }
+                    
+                    
+//                    printString =
+//                        String(dbManager.countRows())
 //                    printString = dbManager.dbPath
                     
                     
