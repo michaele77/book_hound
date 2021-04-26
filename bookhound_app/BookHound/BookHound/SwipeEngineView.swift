@@ -12,7 +12,7 @@ import SwiftUI
 struct SwipeEngineView: View {
 //    @State var bookJSON
     
-    let server = ServerLink()
+    let server = serverLink()
     
     var body: some View {
         VStack {
