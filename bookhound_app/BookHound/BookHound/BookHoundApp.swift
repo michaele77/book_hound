@@ -7,6 +7,12 @@
 
 import SwiftUI
 
+
+//protocol DataDelegate {
+//    func updateBookView(newArr: String)
+//}
+
+
 @main
 struct BookHoundApp: App {
     var body: some Scene {

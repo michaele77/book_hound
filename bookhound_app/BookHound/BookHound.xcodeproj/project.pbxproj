@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		274FD8992634E420007C0019 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 274FD8982634E420007C0019 /* Alamofire */; };
 		278E666A2622C10300ABF178 /* BookHoundApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66692622C10300ABF178 /* BookHoundApp.swift */; };
 		278E666C2622C10300ABF178 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E666B2622C10300ABF178 /* ContentView.swift */; };
 		278E666E2622C10500ABF178 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 278E666D2622C10500ABF178 /* Assets.xcassets */; };
@@ -40,6 +41,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		274FD89D2634E459007C0019 /* ServerLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerLink.swift; sourceTree = "<group>"; };
 		278E66662622C10300ABF178 /* BookHound.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookHound.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		278E66692622C10300ABF178 /* BookHoundApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookHoundApp.swift; sourceTree = "<group>"; };
 		278E666B2622C10300ABF178 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -69,6 +71,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				278E66BC262423A700ABF178 /* SQLite in Frameworks */,
+				274FD8992634E420007C0019 /* Alamofire in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -92,6 +95,7 @@
 		278E665D2622C10300ABF178 = {
 			isa = PBXGroup;
 			children = (
+				274FD89D2634E459007C0019 /* ServerLink.swift */,
 				278E66C5262561F600ABF178 /* bookhound_database_graph_1.db  */,
 				278E66C026242AA000ABF178 /* chinook.db */,
 				278E66B526241BF300ABF178 /* bookhound_database_golden.db */,
@@ -174,6 +178,7 @@
 			name = BookHound;
 			packageProductDependencies = (
 				278E66BB262423A700ABF178 /* SQLite */,
+				274FD8982634E420007C0019 /* Alamofire */,
 			);
 			productName = BookHound;
 			productReference = 278E66662622C10300ABF178 /* BookHound.app */;
@@ -248,6 +253,7 @@
 			mainGroup = 278E665D2622C10300ABF178;
 			packageReferences = (
 				278E66BA262423A700ABF178 /* XCRemoteSwiftPackageReference "SQLite.swift" */,
+				274FD8972634E420007C0019 /* XCRemoteSwiftPackageReference "Alamofire" */,
 			);
 			productRefGroup = 278E66672622C10300ABF178 /* Products */;
 			projectDirPath = "";
@@ -614,6 +620,14 @@
 /* End XCConfigurationList section */
 
 /* Begin XCRemoteSwiftPackageReference section */
+		274FD8972634E420007C0019 /* XCRemoteSwiftPackageReference "Alamofire" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/Alamofire/Alamofire";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 5.4.3;
+			};
+		};
 		278E66BA262423A700ABF178 /* XCRemoteSwiftPackageReference "SQLite.swift" */ = {
 			isa = XCRemoteSwiftPackageReference;
 			repositoryURL = "https://github.com/stephencelis/SQLite.swift.git";
@@ -625,6 +639,11 @@
 /* End XCRemoteSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
+		274FD8982634E420007C0019 /* Alamofire */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 274FD8972634E420007C0019 /* XCRemoteSwiftPackageReference "Alamofire" */;
+			productName = Alamofire;
+		};
 		278E66BB262423A700ABF178 /* SQLite */ = {
 			isa = XCSwiftPackageProductDependency;
 			package = 278E66BA262423A700ABF178 /* XCRemoteSwiftPackageReference "SQLite.swift" */;
