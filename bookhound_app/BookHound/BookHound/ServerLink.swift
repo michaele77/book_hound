@@ -25,66 +25,27 @@ struct User: Decodable {
 }
 
 struct Book: Decodable {
-    var _id: Int
-    var title: String
-    var href: String
-    var author: String
-    var meta: String
-    var details: String
-    var series: String
-    var summary: String
-    var imageSource: String
-    var imageBinary: String // TODO: Figure out how to store an image binary in swift!
-    var fullParameter: Bool
-    var ratersID: [Int]
-    var ratersRating: [Float]
-//    var genres: [genreObject]
-    var dateUpdated: Date
+    var _id: Int?
+    var title: String?
+    var href: String?
+    var author: String?
+    var meta: String?
+    var details: String?
+    var series: String?
+    var summary: String?
+    var imageSource: String?
+    var imageBinary: String? // TODO: Figure out how to store an image binary in swift!
+    var fullParameter: Bool?
+    var ratersID: [Int]?
+    var ratersRating: [Float]?
+    var genres: [genreObject]?
+    var genreWeight: Int?
+    var dateUpdated: String?
 }
-//
-//extension Book {
-//    init(from decoder: Decoder) throws {
-//        let container = try decoder.container(keyedBy: CodingKeys.self)
-//
-//        let _id = try container.decode(String.self, forKey: ._id)
-//        let title = try container.decode(String.self, forKey: .title)
-//        let href = try container.decode(String.self, forKey: .href)
-//        let author = try container.decode(String.self, forKey: .author)
-//        let meta = try container.decode(String.self, forKey: .meta)
-//        let details = try container.decode(String.self, forKey: .details)
-//        let series = try container.decode(String.self, forKey: .series)
-//        let summary = try container.decode(String.self, forKey: .summary)
-//        let imageSource = try container.decode(String.self, forKey: .imageSource)
-//        let imageBinary = try container.decode(String.self, forKey: .imageBinary)
-//        let fullParameter = try container.decode(String.self, forKey: .fullParameter)
-//        let ratersID = try container.decode(String.self, forKey: .ratersID)
-//        let ratersRating = try container.decode(String.self, forKey: .ratersRating)
-//        let genres = try container.decode(String.self, forKey: .genres)
-//        let dateUpaded = try container.decode(String.self, forKey: .dateUpaded)
-//    }
-//
-//    enum CodingKeys: String, CodingKey {
-//        case _id = "_id"
-//        case title = "title"
-//        case href = "href"
-//        case author = "author"
-//        case meta = "meta"
-//        case details = "details"
-//        case series = "series"
-//        case summary = "summmary"
-//        case imageSource = "imageSource"
-//        case imageBinary = "imageBinary"
-//        case fullParameter = "fullParameter"
-//        case ratersID = "ratersID"
-//        case ratersRating = "ratersRating"
-//        case genres = "genres"
-//        case dateUpaded = "dateUpdated"
-//    }
-//}
 
 struct genreObject: Decodable {
-    var genreArr: [String]
-    var votingCount: Int
+    var genreLabelList: [String]
+    var normalizedWeight: Float
 }
 
 // TODO: uncomment below
@@ -95,42 +56,40 @@ class serverLink {
        print("initializing serverLink class~~")
     }
     
-//    static let functions = ServerLink()
     
-    func viewDidLoad() {
+    func fetchBook_byID(bookID: Int) -> Book? {
         print("I am in the class!")
+        var returnData: Book  = Book()
         
         AF.request("http://192.168.1.72:8084/fetchBook?bookID=186074").responseJSON {
             response in
             print(response.data)
             let data = String(data: response.data!, encoding: .utf8)
-            
-            print(data!)
-            print("----PARTITION---")
+//            print(data!)
                         
-            
-//            var dataJSON: Book
-            
             do {
                 let decoder = JSONDecoder()
-                decoder.dateDecodingStrategy = .formatted(DateFormatter.iso8601)
+//                decoder.dateDecodingStrategy = .iso8601
+
                 var dataJSON = try decoder.decode(Book.self, from: (data?.data(using: .utf8))!)
+                returnData = dataJSON
                 print("JSON unpacking successful! See prints below...")
+                
+                // Some victory prints: (remove this later...)
+                print(dataJSON.genres)
+                print(dataJSON.genreWeight)
                 print(dataJSON.dateUpdated)
+                            
             } catch {
-                print("Could not unwrap the JSON! See This error!!")
+                print("Could not unwrap the JSON! See error:")
                 print(error) // error is a local variable in any do/catch block!
+                
             }
             
-            
-            
-            
-            
-//            print(data.author)
         }
+        
+        return returnData
     }
-
-
 
 
 //    //  Fetch function: Get user JSON by user ID

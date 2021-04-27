@@ -13,6 +13,7 @@ struct SwipeEngineView: View {
 //    @State var bookJSON
     
     let server = serverLink()
+    @State var printWeight = -7
     
     var body: some View {
         VStack {
@@ -24,9 +25,10 @@ struct SwipeEngineView: View {
             Spacer()
             
             Button(action: {
-                server.viewDidLoad()
+                let returnedJSON = server.fetchBook_byID(bookID: 3s)
+                printWeight = returnedJSON?.genreWeight ?? 0
             }) {
-                Text("Debug button")
+                Text("Debug button: " + String(printWeight))
             }
             
             Spacer()
