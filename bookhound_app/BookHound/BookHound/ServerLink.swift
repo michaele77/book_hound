@@ -61,35 +61,23 @@ struct Book: Decodable {
     }
 }
 
-//struct Book: Decodable {
-//    var _id: Int?
-//    var title: String?
-//    var href: String?
-//    var author: String?
-//    var meta: String?
-//    var details: String?
-//    var series: String?
-//    var summary: String?
-//    var imageSource: String?
-//    var imageBinary: String? // TODO: Figure out how to store an image binary in swift!
-//    var fullParameter: Bool?
-//    var ratersID: [Int]?
-//    var ratersRating: [Float]?
-//    var genres: [genreObject]?
-//    var genreWeight: Int?
-//    var dateUpdated: String?
-//}
 
 struct genreObject: Decodable {
     var genreLabelList: [String]
     var normalizedWeight: Float
 }
 
-// TODO: uncomment below
-////  Main serverLink class to talk with nodeJS server
+
+struct userIDList: Decodable {
+    var array: [Int]
+}
+
+
+
 class serverLink {
     
     var cachedBook = Book()
+    var cachedUserIDs: [Int] = []
     
     init() {
        print("initializing serverLink class~~")
@@ -120,6 +108,40 @@ class serverLink {
             
         }
                 
+    }
+    
+    
+    func fetchUsers_allIDs() {
+        AF.request("http://192.168.1.72:8084/fetchAllUserIDs").responseJSON {
+            response in
+            
+            print("start of allIDs func")
+            
+            print(response.data!.count)
+            
+            print(response.data!)
+            
+            let data = String(data: response.data!, encoding: .utf8)
+            
+                        
+            do {
+                let decoder = JSONDecoder()
+//                decoder.dateDecodingStrategy = .iso8601
+
+                let tempArr = try decoder.decode(userIDList.self, from: (data?.data(using: .utf8))!)
+                self.cachedUserIDs = tempArr.array
+                
+                print("JSON unpacking successful! See prints below...")
+            
+                            
+            } catch {
+                print("Could not unwrap the JSON! See error:")
+                print(error) // error is a local variable in any do/catch block!
+                
+            }
+            
+        }
+        
     }
 
 

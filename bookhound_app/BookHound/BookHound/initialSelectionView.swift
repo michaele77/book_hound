@@ -13,28 +13,14 @@ struct initialSelectionView: View {
     @State var printString = ""
     @State var favBookList: [String] = [] //["first"]
     
+    
     let header_string =
         "What are your favorite books?"
     let sub_header_string =
         "(You can enter more than one!)"
     
     let varToPass_1 = "test string here!"
-        
-//    func textFieldShouldReturn(textField: UITextField) -> Bool {
-//        print("return pressed")
-//        printString = "return pressed!!!"
-//        textField.resignFirstResponder()
-//        return false
-//    }
-    
-//    func buildView(types: [Any], index: Int) -> AnyView {
-//        switch types[index].self {
-//           case is View1.Type: return AnyView( View1() )
-//           case is View2.Type: return AnyView( View2() )
-//           default: return AnyView(EmptyView())
-//        }
-//    }
-    
+    let server = serverLink()
 
     
     var body: some View {
@@ -75,10 +61,9 @@ struct initialSelectionView: View {
                 Form {
                     Section(header: Text("Fav Books")) {
                         ForEach(favBookList, id: \.self) { curStr in
-                            Text(curStr as! String)
+                            Text(String(curStr))
                                 .padding()
                         }
-
                     }
                 }
                 
@@ -101,6 +86,8 @@ struct initialSelectionView: View {
                     
                 }.simultaneousGesture(TapGesture().onEnded{
                     DataManager.sharedInstance.testString = "test123"
+                    let printVar = server.cachedUserIDs.count
+                    print("my datamanager list is \(printVar) long")
                 })
 
                 
@@ -130,16 +117,27 @@ struct initialSelectionView: View {
             }
                 
             
-        }
-        
-        
+        }.onAppear(perform: loadingFunc)
 
+        
     }
     
     
+    func loadingFunc() {
+    //    let server = serverLink()
+        server.fetchUsers_allIDs()
+        DataManager.sharedInstance.userIDs = server.cachedUserIDs
+        DataManager.sharedInstance.initializeMatchScores()
+        print("Finished loading!!")
+    }
+
     
     
 }
+
+
+
+
 
 struct initialSelectionView_Previews: PreviewProvider {
     static var previews: some View {

@@ -8,13 +8,11 @@
 import SwiftUI
 
 
-//protocol DataDelegate {
-//    func updateBookView(newArr: String)
-//}
-
-
 @main
 struct BookHoundApp: App {
+    // At startup, lets load the userlist
+    
+    
     var body: some Scene {
         
         WindowGroup {

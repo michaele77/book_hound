@@ -14,6 +14,7 @@ struct SwipeEngineView: View {
     
     let server = serverLink()
     @State var printWeight = -7
+    @State var printWeight2 = -3
 //    @State var returnedJSON: Book = Book()
 //    let varToPass_1: String
     
@@ -44,6 +45,19 @@ struct SwipeEngineView: View {
                 .foregroundColor(.green)
             
             Spacer()
+            
+            Button(action: {
+                server.fetchUsers_allIDs()
+                
+//                print("     -->we are inside the button!!")
+//                print("     --> " + String(server.cachedBook.genreWeight))
+//                printWeight2 = server.cachedBook.genreWeight
+            
+                
+            }) {
+                Text("Debug button for Userlist: " + String(printWeight2))
+            }
+            
             
         }
         
