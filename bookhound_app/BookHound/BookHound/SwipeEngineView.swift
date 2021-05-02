@@ -15,6 +15,7 @@ struct SwipeEngineView: View {
     let server = serverLink()
     @State var printWeight = -7
 //    @State var returnedJSON: Book = Book()
+//    let varToPass_1: String
     
     var body: some View {
         VStack {
@@ -26,17 +27,8 @@ struct SwipeEngineView: View {
             Spacer()
             
             Button(action: {
-//                if (returnedJSON._id < 0) {
-//                    print("~~~~~Getting new value")
-////                    returnedJSON = (server.fetchBook_byID(bookID: 3))
-//                    returnedJSON = (server.fetchBook_byID(bookID: 3))
-//                } else {
-//                    print("~~~~~~Passed the if!")
-//                }
-                
                 server.fetchBook_byID(bookID: 3)
                 
-                                
                 print("     -->we are inside the button!!")
                 print("     --> " + String(server.cachedBook.genreWeight))
                 printWeight = server.cachedBook.genreWeight
@@ -48,54 +40,18 @@ struct SwipeEngineView: View {
             
             Spacer()
             
+            Text(DataManager.sharedInstance.testString)
+                .foregroundColor(.green)
+            
+            Spacer()
+            
         }
         
-        
     }
-    
-//    func viewDidLoad() {
-//        print("I am here")
-//
-//        AF.request("http://192.168.1.72:8084/fetchBook?bookID=186074").responseJSON {
-//            response in
-//            print(response.data)
-//            let data = String(data: response.data!, encoding: .utf8)
-//
-//            let dataJSON = JSONDecoder.decode([Book].self, from: )
-//
-//            print(data!)
-//            print("----PARTITION---")
-//            print(data.author)
-//        }
-//
-////        let jsonData = try JSONSerialization.data(withJSONObject: metadata)
-////
-////        // Convert to a string and print
-////        if let JSONString = String(data: jsonData, encoding: String.Encoding.utf8) {
-////           print(JSONString)
-////        }
-////
-//
-//
-////        debugPrint(bookJSON)
-//    }
-    
-    
+ 
 }
     
-    
-    
 
-//extension SwipeEngineView: DataDelegate {
-//    // Lets load in out JSON book file
-//    func updateBookView(newArr: String) {
-//        do {
-//            notesArr = try JSONDecoder.decode(
-//        } catch {
-//            print("filed to decode!")
-//        }
-//    }
-//}
 
 
 struct SwipeEngineView_Previews: PreviewProvider {

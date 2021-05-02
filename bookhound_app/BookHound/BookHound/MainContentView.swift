@@ -8,6 +8,8 @@
 import SwiftUI
 
 struct MainContentView: View {
+//    let varToPass_1: String
+    
     var body: some View {
         TabView {
             SwipeEngineView().tabItem {

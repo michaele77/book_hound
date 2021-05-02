@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		274FD8992634E420007C0019 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 274FD8982634E420007C0019 /* Alamofire */; };
 		274FD8E6263690E2007C0019 /* ServerLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274FD89D2634E459007C0019 /* ServerLink.swift */; };
+		274FD8EB263E71ED007C0019 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274FD8EA263E71AB007C0019 /* DataManager.swift */; };
 		278E666A2622C10300ABF178 /* BookHoundApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E66692622C10300ABF178 /* BookHoundApp.swift */; };
 		278E666C2622C10300ABF178 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 278E666B2622C10300ABF178 /* ContentView.swift */; };
 		278E666E2622C10500ABF178 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 278E666D2622C10500ABF178 /* Assets.xcassets */; };
@@ -43,6 +44,7 @@
 
 /* Begin PBXFileReference section */
 		274FD89D2634E459007C0019 /* ServerLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerLink.swift; sourceTree = "<group>"; };
+		274FD8EA263E71AB007C0019 /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
 		278E66662622C10300ABF178 /* BookHound.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookHound.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		278E66692622C10300ABF178 /* BookHoundApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BookHoundApp.swift; sourceTree = "<group>"; };
 		278E666B2622C10300ABF178 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
@@ -119,6 +121,7 @@
 		278E66682622C10300ABF178 /* BookHound */ = {
 			isa = PBXGroup;
 			children = (
+				274FD8EA263E71AB007C0019 /* DataManager.swift */,
 				274FD89D2634E459007C0019 /* ServerLink.swift */,
 				278E66692622C10300ABF178 /* BookHoundApp.swift */,
 				278E666B2622C10300ABF178 /* ContentView.swift */,
@@ -299,6 +302,7 @@
 			buildActionMask = 2147483647;
 			files = (
 				278E66AC2624114200ABF178 /* SettingsView.swift in Sources */,
+				274FD8EB263E71ED007C0019 /* DataManager.swift in Sources */,
 				278E66A22624111D00ABF178 /* SwipeEngineView.swift in Sources */,
 				278E666C2622C10300ABF178 /* ContentView.swift in Sources */,
 				278E66B1262419CF00ABF178 /* DBManager.swift in Sources */,
