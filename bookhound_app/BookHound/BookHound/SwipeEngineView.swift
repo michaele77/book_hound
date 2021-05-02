@@ -14,6 +14,7 @@ struct SwipeEngineView: View {
     
     let server = serverLink()
     @State var printWeight = -7
+//    @State var returnedJSON: Book = Book()
     
     var body: some View {
         VStack {
@@ -25,8 +26,22 @@ struct SwipeEngineView: View {
             Spacer()
             
             Button(action: {
-                let returnedJSON = server.fetchBook_byID(bookID: 3s)
-                printWeight = returnedJSON?.genreWeight ?? 0
+//                if (returnedJSON._id < 0) {
+//                    print("~~~~~Getting new value")
+////                    returnedJSON = (server.fetchBook_byID(bookID: 3))
+//                    returnedJSON = (server.fetchBook_byID(bookID: 3))
+//                } else {
+//                    print("~~~~~~Passed the if!")
+//                }
+                
+                server.fetchBook_byID(bookID: 3)
+                
+                                
+                print("     -->we are inside the button!!")
+                print("     --> " + String(server.cachedBook.genreWeight))
+                printWeight = server.cachedBook.genreWeight
+            
+                
             }) {
                 Text("Debug button: " + String(printWeight))
             }
