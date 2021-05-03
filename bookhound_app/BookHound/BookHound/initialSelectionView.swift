@@ -9,11 +9,16 @@ import SwiftUI
 
 struct initialSelectionView: View {
     // initialSelectorView class parameters
+    
+    // @State variables
     @State var user_input = ""
     @State var printString = ""
     @State var favBookList: [String] = [] //["first"]
+    @State var favBookIDsList: [Int] = []
+    @State var textBoxLabel = "Enter book name..."
     
     
+    // Other (non mutating) variables
     let header_string =
         "What are your favorite books?"
     let sub_header_string =
@@ -21,8 +26,8 @@ struct initialSelectionView: View {
     
     let varToPass_1 = "test string here!"
     let server = serverLink()
-
     
+
     var body: some View {
         
         
@@ -35,7 +40,7 @@ struct initialSelectionView: View {
                     .font(.system(size: 25))
                 Text(sub_header_string)
                     .padding(.horizontal)
-                TextField("Enter book name...", text: $user_input)
+                TextField(textBoxLabel, text: $user_input)
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                 
@@ -43,8 +48,23 @@ struct initialSelectionView: View {
                 // In this button, we want to add books entered in the textfield
                 // Should clear text, add book to "liked list", and display below
                 Button(action: {
-                    favBookList.append(user_input)
-                    user_input = ""
+                    // TODO: Implement autocorrect based on a pre-loaded list of book names (implement that in dataManager)
+                    // TODO: Modify append values, implement lookup query function in serverLink
+                    // First check that user_input has something TODO: Update this to checking for book name
+                    if (user_input == "") {
+                        print("User added invalid input!")
+                        textBoxLabel = "Please add valid book ID!"
+                        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+                            textBoxLabel = "Enter book name..."
+                        }
+                        
+                    } else {
+                        favBookList.append(user_input)
+                        var userInputInt = Int(user_input) ?? -1
+                        favBookIDsList.append(userInputInt)
+                        DataManager.sharedInstance.updateFavoriteMatch(book: userInputInt)
+                        user_input = ""
+                    }
                     
                 }) {
                     Text("Add book")
@@ -88,27 +108,10 @@ struct initialSelectionView: View {
                     DataManager.sharedInstance.testString = "test123"
                     let printVar = server.cachedUserIDs.count
                     print("my datamanager list is \(printVar) long")
+                    DataManager.sharedInstance.sortMatchKeys()
+                    
                 })
 
-                
-//                Button(action: {
-//
-//                    if (printString == "") {
-//                        printString = "XXX temporary string XXX"
-//                    } else {
-//                        printString = "1"
-//                    }
-//
-//
-////                    printString =
-////                        String(dbManager.countRows())
-////                    printString = dbManager.dbPath
-//
-//
-////                    dbManager.printPath()
-//                }) {
-//                    Text("Debug button")
-//                }
                 
                 Text("DEBUG PRINT: " + printString)
                 Text("User input print: " + user_input)
@@ -126,9 +129,20 @@ struct initialSelectionView: View {
     func loadingFunc() {
     //    let server = serverLink()
         server.fetchUsers_allIDs()
-        DataManager.sharedInstance.userIDs = server.cachedUserIDs
-        DataManager.sharedInstance.initializeMatchScores()
-        print("Finished loading!!")
+        print("number of Ids we have \(server.cachedUserIDs.count)")
+        
+        // Dispatch a delayed, timed functin execution
+        // This is because cachedUserIDs will not be available immediately from the server, it is asynchronous
+        // Wait some fixed number of seconds
+        // TODO: Potentially play with delay here or add in a catch?
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+            print("number of Ids we have \(server.cachedUserIDs.count)")
+            DataManager.sharedInstance.userIDs = server.cachedUserIDs
+            DataManager.sharedInstance.initializeMatchScores()
+            print("Timed thread now finished running!")
+        }
+        
+        print("Finished loading!! (timed thread still running)")
     }
 
     

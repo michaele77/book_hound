@@ -86,7 +86,14 @@ class serverLink {
     
     func fetchBook_byID(bookID: Int) {
         
-        AF.request("http://192.168.1.72:8084/fetchBook?bookID=186074").responseJSON {
+        // Books to fetch:
+        // kingkiller chronicles: 186074
+        // 3 body problem: 20518872
+        // HP 1: 3
+        // LOTR: 119
+        // Gun slinger: 43615
+        
+        AF.request("http://192.168.1.72:8084/fetchBook?bookID=" + String(bookID)).responseJSON {
             response in
             print(response.data)
             let data = String(data: response.data!, encoding: .utf8)
@@ -143,8 +150,7 @@ class serverLink {
         }
         
     }
-
-
+    
 //    //  Fetch function: Get user JSON by user ID
 //    func fetchUser_byID {
 //
