@@ -84,7 +84,7 @@ class serverLink {
     }
     
     
-    func fetchBook_byID(bookID: Int) {
+    func fetchBook_byID(bookID: Int, completion: @escaping (Book) -> Void) {
         
         // Books to fetch:
         // kingkiller chronicles: 186074
@@ -105,16 +105,22 @@ class serverLink {
 
                 self.cachedBook = try decoder.decode(Book.self, from: (data?.data(using: .utf8))!)
                 print("JSON unpacking successful! See prints below...")
+                
+                // Pass data to closure
+                completion(self.cachedBook)
                             
             } catch {
                 self.cachedBook = Book() // Reinitialize to inform that data failed
                 print("Could not unwrap the JSON! See error:")
                 print(error) // error is a local variable in any do/catch block!
                 
+                // Pass data to closure
+                completion(self.cachedBook)
+                
             }
             
         }
-                
+        
     }
     
     

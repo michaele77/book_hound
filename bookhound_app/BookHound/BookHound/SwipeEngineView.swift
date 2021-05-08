@@ -28,12 +28,13 @@ struct SwipeEngineView: View {
             Spacer()
             
             Button(action: {
-                server.fetchBook_byID(bookID: 3)
-                
-                print("     -->we are inside the button!!")
-                print("     --> " + String(server.cachedBook.genreWeight))
-                printWeight = server.cachedBook.genreWeight
-            
+                server.fetchBook_byID(bookID: 3) { (bookData) in
+                    // Closure completion code
+                    print("     -->we are inside the button!!")
+                    print("     --> " + String(server.cachedBook.genreWeight))
+                    printWeight = server.cachedBook.genreWeight
+                    
+                }
                 
             }) {
                 Text("Debug button: " + String(printWeight))

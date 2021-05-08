@@ -69,16 +69,9 @@ class DataManager {
         let favUpdateVal: Float = 5.0 // Pretty high increment value! fiddle with this to change starting state
         print("IN UPDATE FUNC: updating \(book)")
         
-        self.server.fetchBook_byID(bookID: book)
-        
-        // Dispatch a delayed, timed functin execution
-        // Any dependency on server data needs to be done with delayed execution
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            
-            // FOUND A BUG IN DATABASE
-            // Apparently...we have duplicate users connected to books, must have not pruned these during consolidation...
-            // Solution: Keep a hashset of seen users, refuse to add them if they appear in the hashset
-            // Not ideal..but better than rerunning database consolidation
+        self.server.fetchBook_byID(bookID: book) { (bookData) in
+            // Closure code
+            // We want to update matchScore Dictionary AFTER server comms stop
             var seenSet = Set<Int>()
             for curUser in self.server.cachedBook.ratersID {
                 if (self.matchScoreDict[curUser] != nil) {
@@ -96,7 +89,39 @@ class DataManager {
      
             }
             print("Done with dispatched queue execute!")
+            
         }
+        
+
+        
+//        self.server.fetchBook_byID(bookID: book)
+//
+//        // Dispatch a delayed, timed functin execution
+//        // Any dependency on server data needs to be done with delayed execution
+//        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+//
+//            // FOUND A BUG IN DATABASE
+//            // Apparently...we have duplicate users connected to books, must have not pruned these during consolidation...
+//            // Solution: Keep a hashset of seen users, refuse to add them if they appear in the hashset
+//            // Not ideal..but better than rerunning database consolidation
+//            var seenSet = Set<Int>()
+//            for curUser in self.server.cachedBook.ratersID {
+//                if (self.matchScoreDict[curUser] != nil) {
+//                    if (seenSet.contains(curUser)) {
+//                        print(" ~We have seen a repeat (on user \(curUser))")
+//                    } else {
+//                        self.matchScoreDict[curUser]! += favUpdateVal
+//                        seenSet.insert(curUser)
+//                    }
+//
+//
+//                } else {
+//                    print("ERROR- could not find user ID in the dictionary, this should not happen...")
+//                }
+//
+//            }
+//            print("Done with dispatched queue execute!")
+//        }
         
         print("Done with updating favorite match (dispatched thread still running)")
         
@@ -114,17 +139,17 @@ class DataManager {
         print("IN UPDATE FUNC: updating \(bookList)")
         
         for curBook in bookList {
-            self.server.fetchBook_byID(bookID: curBook)
-            for curUser in server.cachedBook.ratersID {
-                if (self.matchScoreDict[curUser] != nil) {
-                    self.matchScoreDict[curUser]! += favUpdateVal
-                    print("---updated user \(curUser) to \(self.matchScoreDict[curUser])")
-                } else {
-                    print("ERROR- could not find user ID in the dictionary, this should not happen...")
+            self.server.fetchBook_byID(bookID: curBook) { (bookData) in
+                // Closure completion code
+                for curUser in self.server.cachedBook.ratersID {
+                    if (self.matchScoreDict[curUser] != nil) {
+                        self.matchScoreDict[curUser]! += favUpdateVal
+                        print("---updated user \(curUser) to \(self.matchScoreDict[curUser])")
+                    } else {
+                        print("ERROR- could not find user ID in the dictionary, this should not happen...")
+                    }
+                    
                 }
-                
-            
-                
             }
                 
         }
