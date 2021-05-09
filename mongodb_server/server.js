@@ -172,7 +172,6 @@ app.get('/fetchFirstOrder', async function(req, res) {
 
 // Get all users in a list
 // GET request
-// URL must be of ID type: userID = x, where x is required user ID
 app.get('/fetchAllUserIDs', function(req, res) {
     try {
         // Have no arguments for this fetch, so no parsing needed
@@ -192,6 +191,35 @@ app.get('/fetchAllUserIDs', function(req, res) {
 
             res.send({array: idList}) // Send whatever mongoose finds in the mongoDB
             console.log('Fetched all user IDs! There were ' + String(idList.length) + ' users returned!')
+        })
+    } catch(err) {
+        next(err)
+    }
+
+})
+
+
+// Get all books in a list
+// GET request
+app.get('/fetchAllBookIDs', function(req, res) {
+    try {
+        // Have no arguments for this fetch, so no parsing needed
+        // Return all of the documents in the user collection
+        // Project the return to be only the user IDs
+        const projectionArg = {"_id": 1}
+        console.log("we here")
+        booksColl.find({})
+        .toArray()
+        .then( function(dbItems) {
+            // Now need to prune out the ids only! Couldnt figure out a way to do it with Mongo queries
+            console.log("we in")
+            let idList = []
+            for (let indx in dbItems) {
+                idList.push(dbItems[indx]["_id"])
+            }
+
+            res.send({array: idList}) // Send whatever mongoose finds in the mongoDB
+            console.log('Fetched all book IDs! There were ' + String(idList.length) + ' books returned!')
         })
     } catch(err) {
         next(err)

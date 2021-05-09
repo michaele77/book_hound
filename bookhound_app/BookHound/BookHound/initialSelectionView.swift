@@ -33,7 +33,12 @@ struct initialSelectionView: View {
         
         NavigationView {
             VStack(alignment: .leading) {
-
+                
+                /*
+                   ++++++++++++++++++++++++++++++++++
+                   + UI ELEMENT: HEADER TEXT/INPUT  +
+                   ++++++++++++++++++++++++++++++++++
+                 */
                 Text(header_string)
                     .bold()
                     .padding(.horizontal)
@@ -44,7 +49,17 @@ struct initialSelectionView: View {
                     .textFieldStyle(RoundedBorderTextFieldStyle())
                     .padding(.horizontal)
                 
+                // ++++++++++++++++++++++++++++++++++
                 
+                
+                
+                
+                
+                /*
+                   ++++++++++++++++++++++++++++++++++
+                   +   UI ELEMENT: ADD BOOK BUTTON  +
+                   ++++++++++++++++++++++++++++++++++
+                 */
                 // In this button, we want to add books entered in the textfield
                 // Should clear text, add book to "liked list", and display below
                 Button(action: {
@@ -62,7 +77,15 @@ struct initialSelectionView: View {
                         favBookList.append(user_input)
                         var userInputInt = Int(user_input) ?? -1
                         favBookIDsList.append(userInputInt)
-                        DataManager.sharedInstance.updateFavoriteMatch(book: userInputInt)
+                         DataManager.sharedInstance.updateFavoriteMatch(book: userInputInt)
+//                        if addingFlag == 2 {
+//                            textBoxLabel = "Input ID is not a fully scraped book!"
+//                            DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
+//                                textBoxLabel = "Enter book name..."
+//                            }
+//                        }
+                        
+                        
                         user_input = ""
                     }
                     
@@ -76,8 +99,18 @@ struct initialSelectionView: View {
                         .cornerRadius(20)
                         .frame(maxWidth: .infinity)
                 }
-        
                 
+                // ++++++++++++++++++++++++++++++++++
+                
+                
+                
+                 
+                
+                /*
+                   ++++++++++++++++++++++++++++++++++
+                   +  UI ELEMENT: ADDED BOOKS FORM  +
+                   ++++++++++++++++++++++++++++++++++
+                 */
                 Form {
                     Section(header: Text("Fav Books")) {
                         ForEach(favBookList, id: \.self) { curStr in
@@ -87,10 +120,17 @@ struct initialSelectionView: View {
                     }
                 }
                 
+                // ++++++++++++++++++++++++++++++++++
+                
                 
                 Spacer()
                 
                 
+                /*
+                   ++++++++++++++++++++++++++++++++++
+                   +  UI ELEMENT: TO ENGINE BUTTON  +
+                   ++++++++++++++++++++++++++++++++++
+                 */
                 // NOTE: need to generate DataManager upon pressing the navigationLink
                 // Need to use simultaneousGesture or isActive to perform action while navigating away
                 NavigationLink(
@@ -106,16 +146,29 @@ struct initialSelectionView: View {
                     
                 }.simultaneousGesture(TapGesture().onEnded{
                     DataManager.sharedInstance.testString = "test123"
-                    let printVar = server.cachedUserIDs.count
-                    print("my datamanager list is \(printVar) long")
+                    print("my datamanager list is \(self.server.cachedUserIDs.count) long")
                     DataManager.sharedInstance.sortMatchKeys()
                     
+                    
                 })
+                
+                // ++++++++++++++++++++++++++++++++++
 
+                
+                
+                
+                
+                /*
+                   ++++++++++++++++++++++++++++++++++
+                   +        DEBUG PRINT TEXTS       +
+                   ++++++++++++++++++++++++++++++++++
+                 */
                 
                 Text("DEBUG PRINT: " + printString)
                 Text("User input print: " + user_input)
                 Text(" --> Last char: " + String(user_input.last ?? "X"))
+    
+                // ++++++++++++++++++++++++++++++++++
             
             }
                 
@@ -127,25 +180,28 @@ struct initialSelectionView: View {
     
     
     func loadingFunc() {
-    //    let server = serverLink()
-        server.fetchUsers_allIDs()
-        print("number of Ids we have \(server.cachedUserIDs.count)")
-        
-        // Dispatch a delayed, timed functin execution
-        // This is because cachedUserIDs will not be available immediately from the server, it is asynchronous
-        // Wait some fixed number of seconds
-        // TODO: Potentially play with delay here or add in a catch?
-        DispatchQueue.main.asyncAfter(deadline: .now() + 2.0) {
-            print("number of Ids we have \(server.cachedUserIDs.count)")
+        // Load in all of the userIDs
+        // Initialize userID match scores and user IDs in shared instane of DM
+        self.server.fetchUsers_allIDs() {(userList) in
+            // Completon closure code:
+            // Execute based on closure to ensure that data is available after server query
+            print("number of Ids we have \(userList.count)")
             DataManager.sharedInstance.userIDs = server.cachedUserIDs
             DataManager.sharedInstance.initializeMatchScores()
-            print("Timed thread now finished running!")
+                        
         }
         
-        print("Finished loading!! (timed thread still running)")
+        // Load in all of the bookIDs
+        self.server.fetchBooks_allIDs() {(bookList) in
+            // Completion closure code:
+            // Execute based on closure to ensure that data is available after server query
+            print("number of Ids we have \(bookList.count)")
+            DataManager.sharedInstance.bookIDs = server.cachedBookIDs
+            DataManager.sharedInstance.initializeBookScores()
+            
+        }
+        
     }
-
-    
     
 }
 

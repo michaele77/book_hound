@@ -22,11 +22,40 @@ struct SwipeEngineView: View {
         VStack {
             Spacer()
             
+            /*
+               ++++++++++++++++++++++++++++++++++
+               +  UI ELEMENT: TO ENGINE BUTTON  +
+               ++++++++++++++++++++++++++++++++++
+             */
             Text("Swipe Engine page")
                 .foregroundColor(.gray)
             
+            // ++++++++++++++++++++++++++++++++++
+            
+            
+            
+            /*
+               ++++++++++++++++++++++++++++++++++
+               +   UI ELEMENT: MAIN BOOK VIEW   +
+               ++++++++++++++++++++++++++++++++++
+             */
+            // This will be the main book recommendation view
+            // At first, let's just show the top book in sortedMatches
+            
+            
+            // ++++++++++++++++++++++++++++++++++
+            
+            
+            
             Spacer()
             
+            
+            
+            /*
+               ++++++++++++++++++++++++++++++++++
+               +   DEBUG PRINTS AND BUTTONS    +
+               ++++++++++++++++++++++++++++++++++
+             */
             Button(action: {
                 server.fetchBook_byID(bookID: 3) { (bookData) in
                     // Closure completion code
@@ -40,24 +69,27 @@ struct SwipeEngineView: View {
                 Text("Debug button: " + String(printWeight))
             }
             
-            Spacer()
             
             Text(DataManager.sharedInstance.testString)
                 .foregroundColor(.green)
             
-            Spacer()
             
             Button(action: {
-                server.fetchUsers_allIDs()
-                
-//                print("     -->we are inside the button!!")
-//                print("     --> " + String(server.cachedBook.genreWeight))
-//                printWeight2 = server.cachedBook.genreWeight
-            
+                self.server.fetchUsers_allIDs() {(userList) in
+                    printWeight2 = userList.count
+                    print("Finished user closure, have \(printWeight2) users")
+                    
+                }
                 
             }) {
                 Text("Debug button for Userlist: " + String(printWeight2))
             }
+            
+            // ++++++++++++++++++++++++++++++++++
+            
+            
+            
+            Spacer()
             
             
         }

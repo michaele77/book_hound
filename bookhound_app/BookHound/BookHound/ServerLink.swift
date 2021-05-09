@@ -68,8 +68,19 @@ struct genreObject: Decodable {
 }
 
 
-struct userIDList: Decodable {
+struct IDList: Decodable {
     var array: [Int]
+}
+
+
+struct nearestNeighbor: Decodable {
+    var array: [nearestTriplet]
+
+    
+struct nearestTriplet: Decodable {
+    var userID: Int
+    var bookID: Int
+    var rating: Float // TODO: Check this! I think there are some 4.5's in there...
 }
 
 
@@ -77,7 +88,8 @@ struct userIDList: Decodable {
 class serverLink {
     
     var cachedBook = Book()
-    var cachedUserIDs: [Int] = []
+    var cachedUserIDs: Set<Int> = []
+    var cachedBookIDs: Set<Int> = []
     
     init() {
        print("initializing serverLink class~~")
@@ -124,38 +136,83 @@ class serverLink {
     }
     
     
-    func fetchUsers_allIDs() {
+    func fetchUsers_allIDs(completion: @escaping ([Int]) -> Void) {
         AF.request("http://192.168.1.72:8084/fetchAllUserIDs").responseJSON {
             response in
             
-            print("start of allIDs func")
-            
-            print(response.data!.count)
-            
-            print(response.data!)
-            
             let data = String(data: response.data!, encoding: .utf8)
             
-                        
             do {
                 let decoder = JSONDecoder()
 //                decoder.dateDecodingStrategy = .iso8601
 
-                let tempArr = try decoder.decode(userIDList.self, from: (data?.data(using: .utf8))!)
-                self.cachedUserIDs = tempArr.array
-                
+                let tempArr = try decoder.decode(IDList.self, from: (data?.data(using: .utf8))!)
+                self.cachedUserIDs = Set(tempArr.array)
                 print("JSON unpacking successful! See prints below...")
-            
+                completion(tempArr.array)
                             
             } catch {
                 print("Could not unwrap the JSON! See error:")
                 print(error) // error is a local variable in any do/catch block!
+                completion([])
                 
             }
             
         }
         
     }
+    
+    
+    
+    func fetchBooks_allIDs(completion: @escaping ([Int]) -> Void) {
+        AF.request("http://192.168.1.72:8084/fetchAllBookIDs").responseJSON {
+            response in
+            
+            let data = String(data: response.data!, encoding: .utf8)
+            
+            do {
+                let decoder = JSONDecoder()
+
+                let tempArr = try decoder.decode(IDList.self, from: (data?.data(using: .utf8))!)
+                self.cachedBookIDs = Set(tempArr.array)
+                print("JSON unpacking successful! See prints below...")
+                completion(tempArr.array)
+                            
+            } catch {
+                print("Could not unwrap the JSON! See error:")
+                print(error) // error is a local variable in any do/catch block!
+                completion([])
+                
+            }
+            
+        }
+    }
+    
+    
+    func fetchFirstOrder(bookID: Int, completion: @escaping ([nearestTriplet]) -> Void) {
+        AF.request("http://192.168.1.72:8084/fetchFirstOrder?bookID=" + String(bookID)).responseJSON {
+            response in
+            
+            let data = String(data: response.data!, encoding: .utf8)
+            
+            do {
+                let decoder = JSONDecoder()
+
+                let tempArr = try decoder.decode(nearestNeighbor.self, from: (data?.data(using: .utf8))!)
+                print("JSON unpacking successful! See prints below...")
+                completion(tempArr.array)
+                            
+            } catch {
+                print("Could not unwrap the JSON! See error:")
+                print(error) // error is a local variable in any do/catch block!
+                completion([])
+                
+            }
+            
+        }
+    }
+    }
+    
     
 //    //  Fetch function: Get user JSON by user ID
 //    func fetchUser_byID {
