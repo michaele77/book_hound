@@ -148,8 +148,7 @@ struct initialSelectionView: View {
                     DataManager.sharedInstance.testString = "test123"
                     print("my datamanager list is \(self.server.cachedUserIDs.count) long")
                     DataManager.sharedInstance.sortMatchKeys()
-                    
-                    
+                    DataManager.sharedInstance.sortBookKeys()
                 })
                 
                 // ++++++++++++++++++++++++++++++++++

@@ -1,3 +1,14 @@
+// MONGODB STARTING DEBUGGING
+/* 
+Upon restarting the computer, the mongo db server will shut off
+See this link for mongodb startup procedure: https://stackoverflow.com/a/65916603
+>> sudo brew services start mongodb-community
+Then, to confirm it starts, use shell:
+>>mongo
+>>show dbs 
+Last line Shows the databases
+*/
+
 const express = require('express')
 var app = express()
 const url = require('url')
@@ -90,6 +101,8 @@ app.get('/fetchUser', function(req, res) {
 
 async function asyncFindFirstOrder(bookID) {
 
+    var returnDict = {}
+
     let masterUserArr, masterUserRatingsArr
     let masterArr = []
     var dbItems = await booksColl.findOne({_id: bookID})
@@ -121,11 +134,13 @@ async function asyncFindFirstOrder(bookID) {
         // At each iteration in this inner loop, add to the 
         for (let bIndx in curBookArr) {
             tmpRating = rating_book2usr * rating_usr2book[bIndx]
-            masterArr.push( [curUsr, curBookArr[bIndx], tmpRating] )
+            // masterArr.push( [curUsr, curBookArr[bIndx], tmpRating] )
+            masterArr.push( {userID: curUsr, bookID: curBookArr[bIndx], rating: tmpRating} )
         }
 
     }
-    return masterArr
+    returnDict["array"] = masterArr
+    return returnDict
 
 }
 
@@ -154,10 +169,10 @@ app.get('/fetchFirstOrder', async function(req, res) {
         const queryObj = url.parse(req.url,true).query
         const bookID = Number(queryObj['bookID'])
 
-        let bigArr = await asyncFindFirstOrder(bookID)
+        let returnJSON = await asyncFindFirstOrder(bookID)
         console.log('we here mate')
-        console.log(bigArr.length)
-        res.send(bigArr)
+        console.log(returnJSON.length)
+        res.send(returnJSON)
         console.log('we after async!')
 
     } catch(err) {

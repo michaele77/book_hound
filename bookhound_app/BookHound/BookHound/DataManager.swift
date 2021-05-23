@@ -22,6 +22,7 @@ class DataManager {
     var matchScoreDict: [Int: Float] = [:]
     var sortedMatchKeys: [Int] = []
     var bookScoreDict: [Int: Float] = [:]
+    var sortedBookKeys: [Int] = []
     
     let server = serverLink()
      
@@ -52,7 +53,7 @@ class DataManager {
     
     // Helper function to update the matchScore dictionary sort
     // Sort the helper dictionary by value and output the keys into the shared instance variable
-    // This should be called everytime we want to retrieve the top book
+    // This should be called everytime we want to retrieve the top User
     func sortMatchKeys() {
         // 1-liner to sort by values and return the keys
         self.sortedMatchKeys = Array(self.matchScoreDict.keys).sorted(by: {self.matchScoreDict[$0]! > self.matchScoreDict[$1]!})
@@ -62,7 +63,7 @@ class DataManager {
         // Test top key
         print("Top key is \(topKey) with value of \(self.matchScoreDict[topKey]!)")
         // Test getting a counter of key/value frequencies
-        let countArray = matchScoreDict.values.map { ($0, 1)} // Map all of the dictionary values to a key value pair with each equaling 1
+        let countArray = matchScoreDict.values.map { ($0, 1) } // Map all of the dictionary values to a key value pair with each equaling 1
         let valueFrequency = Dictionary(countArray, uniquingKeysWith: +) // Create dictionary from count array, adding when collision occures with hasing counts
         print(valueFrequency)
         // Test getting the top and bottom occurance freuquency values
@@ -70,6 +71,46 @@ class DataManager {
         let minValCnt = valueFrequency[vfVals.max()!]
         let maxValCnt = valueFrequency[vfVals.min() ?? 1.0]
         print("we have \(minValCnt!) gods and \(maxValCnt!) shitters")
+    }
+    
+    
+    // Very simple helper function to reduce verbosity
+    func grabBookScore(index: Int) -> Float {
+        return self.bookScoreDict[ self.sortedBookKeys[index] ] ?? 0
+    }
+    
+    // Helper function to update the bookScore dictionary sort
+    // Sort the helper dictionary by value and output the keys into the shared instance variable
+    // This should be called everytime we want to retrieve the top book
+    func sortBookKeys() {
+        // 1-liner to sort by values and return the keys
+        self.sortedBookKeys = Array(self.bookScoreDict.keys).sorted(by: {self.bookScoreDict[$0]! > self.bookScoreDict[$1]!})
+        let topKey = self.sortedBookKeys[0]
+        
+        // Get some more debug prints for testing...
+        // Test top key
+        print("Top key is \(topKey) with value of \(self.bookScoreDict[topKey]!)")
+        
+        // We can print other useful stuff from the top key
+        print("See the top books below:")
+        for i in 0...5 {
+            let thisBookId = self.sortedBookKeys[i]
+            self.server.fetchBook_byID(bookID: thisBookId) { bookData in
+                print("  ~index \(i) --> book ID is \(thisBookId), with name \(bookData.title) with score of \(self.grabBookScore(index: i))")
+            }
+            
+        }
+        
+        // Below is code to map the frequency of the book score occurances
+        // This makes sense to do with match scores in users (very samll number of potential match scores), not so much with all possible book scores...
+//        let countArray = bookScoreDict.values.map { ($0, 1) } // Map all of the dictionary values to a key value pair with each equaling 1
+//        let valueFrequency = Dictionary(countArray, uniquingKeysWith: +) // Create dictionary from count array, adding when collision occures with hasing counts
+//        print(valueFrequency)
+//        // Test getting the top and bottom occurance freuquency values
+//        let vfVals = valueFrequency.keys
+//        let minValCnt = valueFrequency[vfVals.max()!]
+//        let maxValCnt = valueFrequency[vfVals.min() ?? 1.0]
+//        print("we have \(minValCnt!) god-like books and \(maxValCnt!) shitter-like books")
     }
     
     
@@ -81,6 +122,12 @@ class DataManager {
         if (self.bookScoreDict.isEmpty && self.bookIDs.count > 0) {
             // If we are here, then our matchscore has not been initialized
             for curID in self.bookIDs {
+//                if curID == 22628 {
+//                    print("Saw this NUMBERRRRRR")
+//                    self.server.fetchBook_byID(bookID: curID) { (thisBook) in
+//                        print("Full param is \(thisBook.fullParameter)")
+//                    }
+//                }
                 self.bookScoreDict[curID] = 1.0
             }
             print("Finished bookScoreDict setup!")
@@ -161,12 +208,37 @@ class DataManager {
                 // 2) Book ID
                 // 3) rating that links them
                 
-                // For each user, grab their match score and their ratingA (to master book) from above
-                // Multiply those with the ratingB from this list
-                // Add that to book Dictionary!
+                
+                // We have pre-computed on the server the bookA -> user -> book B chain
+                // So now all we need to do is multiply this by that user's match score
+                // At the end of this, we will have a max score of MS*25, add this to bookscore
+                
+                // By the structure of the JSON, the user IDs are in order; so the same user will continue until all of their books are done in order
+                var tmpTicker = 0
+                for curNeighbor in tripletArr {
+                    let curMatchScore = self.matchScoreDict[curNeighbor.userID]!
+                    let finalScore = curMatchScore * curNeighbor.rating
+                    if let prevBookScore = self.bookScoreDict[curNeighbor.bookID] {
+                        // Here if the dictionary entree exists
+                        self.bookScoreDict[curNeighbor.bookID] = prevBookScore + finalScore
+                        
+                    } else {
+                        // We are here because the consolidation script was not foolproof
+                        // The "duplicates" of especially popular books have not neccessarily been deleted
+                        // Affects < 0.5% of all books, so not really an issue yet...might need to revisit though
+                        // Example: Perks of being a Wallflower: shows 44451907, real one is 22628 that is in the DB
+                        print("Uh oh...\(curNeighbor.bookID) doesnt exist in the dictionary!")
+                        tmpTicker += 1
+                    }
+                }
+                
+                print("Total number of detatched books is \(tmpTicker)")
                 
                 
-                continue
+                
+                
+                print("TODO HERE")
+                
             }
             
             

@@ -75,6 +75,7 @@ struct IDList: Decodable {
 
 struct nearestNeighbor: Decodable {
     var array: [nearestTriplet]
+}
 
     
 struct nearestTriplet: Decodable {
@@ -210,7 +211,6 @@ class serverLink {
             }
             
         }
-    }
     }
     
     
