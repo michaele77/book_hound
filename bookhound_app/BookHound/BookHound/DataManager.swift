@@ -84,7 +84,7 @@ class DataManager {
     // Helper function to update the bookScore dictionary sort
     // Sort the helper dictionary by value and output the keys into the shared instance variable
     // This should be called everytime we want to retrieve the top book
-    func sortBookKeys() {
+    func sortBookKeys(completion: @escaping (Book) -> Void) {
         // 1-liner to sort by values and return the keys
         self.sortedBookKeys = Array(self.bookScoreDict.keys).sorted(by: {self.bookScoreDict[$0]! > self.bookScoreDict[$1]!})
         let topKey = self.sortedBookKeys[0]
@@ -97,6 +97,7 @@ class DataManager {
         self.server.fetchBook_byID(bookID: topKey) {topBook in
             self.cachedBook = topBook
             print("Done getting the topBook!")
+            completion(self.cachedBook)
         }
         
         // We can print other useful stuff from the top key
@@ -110,6 +111,10 @@ class DataManager {
         }
         
         print("~~~~~~DONE with Data manager sort!")
+        
+//        DispatchQueue.main.async {
+//            self.SwipeEngineView.imgString = "Data manager done w sort!"
+//        }
         
         // Below is code to map the frequency of the book score occurances
         // This makes sense to do with match scores in users (very samll number of potential match scores), not so much with all possible book scores...

@@ -12,14 +12,12 @@ import SwiftUI
 struct SwipeEngineView: View {
 //    @State var bookJSON
     let server = serverLink()
+    let defaultImg = UIImage(imageLiteralResourceName: "loadingImg")
     @State var printWeight = -7
     @State var printWeight2 = -3
     @State var imgData = Data() // Image("loadingImg")
-    @State var altImage = UIImage(data: try! Data(contentsOf: URL(string: "https://i.stack.imgur.com/Xs4RX.jpg")!))!
-
-//    @State var imgData = Data(base64Encoded: DataManager.sharedInstance.cachedBook.imageBinary)
+    @State var altImage = UIImage(imageLiteralResourceName: "loadingImg")
     @State var imgString = DataManager.sharedInstance.cachedBook.title
-//    @State var myUIImage =
     
     // Now let's instantiate our predefined constants that increment/decrement scores
     // CHECK! TODO: put these in their own config file! Also do that with the start update var in the initialization scores
@@ -48,17 +46,7 @@ struct SwipeEngineView: View {
                 }) { Text("East Button") }
                 
                 // ~~DISPLAY THE IMAGE~~
-//                Image(imgString)
-//                UIImage(data: imgData ?? Data())
-                Button(action: {
-                    let topID = DataManager.sharedInstance.sortedBookKeys[0]
-                    print("We will be looking at \(topID)")
-                    self.server.fetchBook_byID(bookID: topID) {thisBook in
-                        imgData = Data(base64Encoded: thisBook.imageBinary)!
-                        
-                    }
-                }) { Text("Image Button") }
-                
+                Image(uiImage: altImage)
                 // ~~DISPLAY THE IMAGE~~
                 
                 Button(action: {
@@ -136,14 +124,23 @@ struct SwipeEngineView: View {
             
             
             
-        }.onAppear(perform: loadingDebugFunc)
+        }.onAppear(perform: loadingFunc)
     }
     
     
-    func loadingDebugFunc() {
-        print("~~~~~~Loading Swipe Engine page...")
-        print("         ~~Testing our Data manager cache:")
-        print("         ~~ID: \(DataManager.sharedInstance.cachedBook._id ?? -7), Title \(DataManager.sharedInstance.cachedBook.title ?? "NOPE")")
+    func loadingFunc() {
+        // Do initial loads from the favorite selector books
+        DataManager.sharedInstance.sortMatchKeys()
+        DataManager.sharedInstance.sortBookKeys() { topBook in
+            imgString = topBook.title
+            imgData = Data(base64Encoded: topBook.imageBinary)!
+            if topBook.fullParameter {
+                altImage = UIImage(data: imgData)!
+            } else {
+                altImage = defaultImg
+            }
+            
+        }
     }
     
     
