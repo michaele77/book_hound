@@ -30,8 +30,8 @@
             filePath = "BookHound/DataManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "244"
-            endingLineNumber = "244"
+            startingLineNumber = "251"
+            endingLineNumber = "251"
             landmarkName = "updateFavoriteMatch(book:)"
             landmarkType = "7">
          </BreakpointContent>
@@ -46,8 +46,8 @@
             filePath = "BookHound/DataManager.swift"
             startingColumnNumber = "9223372036854775807"
             endingColumnNumber = "9223372036854775807"
-            startingLineNumber = "227"
-            endingLineNumber = "227"
+            startingLineNumber = "234"
+            endingLineNumber = "234"
             landmarkName = "updateFavoriteMatch(book:)"
             landmarkType = "7">
          </BreakpointContent>

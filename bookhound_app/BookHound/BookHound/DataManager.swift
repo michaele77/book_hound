@@ -93,16 +93,23 @@ class DataManager {
         // Test top key
         print("Top key is \(topKey) with value of \(self.bookScoreDict[topKey]!)")
         
+        // Grab just the topkey
+        self.server.fetchBook_byID(bookID: topKey) {topBook in
+            self.cachedBook = topBook
+            print("Done getting the topBook!")
+        }
+        
         // We can print other useful stuff from the top key
         print("See the top books below:")
         for i in 0...5 {
             let thisBookId = self.sortedBookKeys[i]
             self.server.fetchBook_byID(bookID: thisBookId) { bookData in
-                self.cachedBook = bookData
                 print("  ~index \(i) --> book ID is \(thisBookId), with name \(bookData.title) with score of \(self.grabBookScore(index: i))")
             }
             
         }
+        
+        print("~~~~~~DONE with Data manager sort!")
         
         // Below is code to map the frequency of the book score occurances
         // This makes sense to do with match scores in users (very samll number of potential match scores), not so much with all possible book scores...

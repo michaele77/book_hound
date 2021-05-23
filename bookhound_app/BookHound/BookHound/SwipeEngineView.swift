@@ -14,8 +14,11 @@ struct SwipeEngineView: View {
     let server = serverLink()
     @State var printWeight = -7
     @State var printWeight2 = -3
-    @State var imgData = Data(base64Encoded: DataManager.sharedInstance.cachedBook.imageBinary)
-    @State var imgString = DataManager.sharedInstance.cachedBook.imageBinary
+    @State var imgData = Data() // Image("loadingImg")
+    @State var altImage = UIImage(data: try! Data(contentsOf: URL(string: "https://i.stack.imgur.com/Xs4RX.jpg")!))!
+
+//    @State var imgData = Data(base64Encoded: DataManager.sharedInstance.cachedBook.imageBinary)
+    @State var imgString = DataManager.sharedInstance.cachedBook.title
 //    @State var myUIImage =
     
     // Now let's instantiate our predefined constants that increment/decrement scores
@@ -29,7 +32,9 @@ struct SwipeEngineView: View {
     var body: some View {
         
         VStack {
-            Image(uiImage: UIImage(data: Data(base64Encoded: DataManager.sharedInstance.cachedBook.imageBinary)!)!)
+            Text(imgString)
+//            Image(uiImage: altImage)
+//            Image(uiImage: UIImage(data: imgData ?? Data())!)
 //            Image(uiImage: UIImage(data: imgData!)!)
 //            UIImage(data: imgData!)
             
@@ -45,6 +50,14 @@ struct SwipeEngineView: View {
                 // ~~DISPLAY THE IMAGE~~
 //                Image(imgString)
 //                UIImage(data: imgData ?? Data())
+                Button(action: {
+                    let topID = DataManager.sharedInstance.sortedBookKeys[0]
+                    print("We will be looking at \(topID)")
+                    self.server.fetchBook_byID(bookID: topID) {thisBook in
+                        imgData = Data(base64Encoded: thisBook.imageBinary)!
+                        
+                    }
+                }) { Text("Image Button") }
                 
                 // ~~DISPLAY THE IMAGE~~
                 
@@ -123,9 +136,17 @@ struct SwipeEngineView: View {
             
             
             
-        }
-        
+        }.onAppear(perform: loadingDebugFunc)
     }
+    
+    
+    func loadingDebugFunc() {
+        print("~~~~~~Loading Swipe Engine page...")
+        print("         ~~Testing our Data manager cache:")
+        print("         ~~ID: \(DataManager.sharedInstance.cachedBook._id ?? -7), Title \(DataManager.sharedInstance.cachedBook.title ?? "NOPE")")
+    }
+    
+    
  
 }
     
