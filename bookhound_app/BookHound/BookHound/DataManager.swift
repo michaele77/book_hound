@@ -25,6 +25,8 @@ class DataManager {
     var sortedBookKeys: [Int] = []
     
     let server = serverLink()
+    
+    var cachedBook = Book()
      
     
     // Function to initialize the match score dictionary
@@ -96,6 +98,7 @@ class DataManager {
         for i in 0...5 {
             let thisBookId = self.sortedBookKeys[i]
             self.server.fetchBook_byID(bookID: thisBookId) { bookData in
+                self.cachedBook = bookData
                 print("  ~index \(i) --> book ID is \(thisBookId), with name \(bookData.title) with score of \(self.grabBookScore(index: i))")
             }
             
@@ -169,7 +172,8 @@ class DataManager {
     func updateFavoriteMatch(book: Int) {
         // We are given an array of book IDs representing favorite books
         // For each book, we want to update all match scores of linked users that like this book
-        let favUpdateVal: Float = 5.0 // Pretty high increment value! fiddle with this to change starting state
+//        let favUpdateVal: Float = 5.0 // Pretty high increment value! fiddle with this to change starting state
+        let favUpdateVal = ParamConfig.initSelWeight
         
         self.server.fetchBook_byID(bookID: book) { (bookData) in
             // Closure code
@@ -256,7 +260,10 @@ class DataManager {
         // We are given an array of book IDs representing favorite books
         // For each book, we want to update all match scores of linked users that like this book
         
-        let favUpdateVal: Float = 5.0 // Pretty high increment value! fiddle with this to change starting state
+//        let favUpdateVal: Float = 5.0 // Pretty high increment value! fiddle with this to change starting state
+        
+        let favUpdateVal = ParamConfig.initSelWeight
+        
         print("IN UPDATE FUNC: updating \(bookList)")
         
         for curBook in bookList {

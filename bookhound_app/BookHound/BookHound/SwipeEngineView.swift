@@ -11,16 +11,56 @@ import SwiftUI
 
 struct SwipeEngineView: View {
 //    @State var bookJSON
-    
     let server = serverLink()
     @State var printWeight = -7
     @State var printWeight2 = -3
-//    @State var returnedJSON: Book = Book()
-//    let varToPass_1: String
+    @State var imgData = Data(base64Encoded: DataManager.sharedInstance.cachedBook.imageBinary)
+    @State var imgString = DataManager.sharedInstance.cachedBook.imageBinary
+//    @State var myUIImage =
+    
+    // Now let's instantiate our predefined constants that increment/decrement scores
+    // CHECK! TODO: put these in their own config file! Also do that with the start update var in the initialization scores
+    let read_bad    = ParamConfig.read_bad
+    let read_good   = ParamConfig.read_good
+    let notrd_bad   = ParamConfig.notread_bad
+    let notrd_good  = ParamConfig.notread_good
+    
     
     var body: some View {
+        
         VStack {
+            Image(uiImage: UIImage(data: Data(base64Encoded: DataManager.sharedInstance.cachedBook.imageBinary)!)!)
+//            Image(uiImage: UIImage(data: imgData!)!)
+//            UIImage(data: imgData!)
+            
+            Button(action: {
+                
+            }) { Text("North Button") }
+            
+            HStack {
+                Button(action: {
+                    
+                }) { Text("East Button") }
+                
+                // ~~DISPLAY THE IMAGE~~
+//                Image(imgString)
+//                UIImage(data: imgData ?? Data())
+                
+                // ~~DISPLAY THE IMAGE~~
+                
+                Button(action: {
+                    
+                }) { Text("West Button") }
+            }
+            
+            Button(action: {
+                
+            }) { Text("South Button") }
+            
+            
             Spacer()
+            
+            
             
             /*
                ++++++++++++++++++++++++++++++++++
@@ -47,10 +87,6 @@ struct SwipeEngineView: View {
             
             
             
-            Spacer()
-            
-            
-            
             /*
                ++++++++++++++++++++++++++++++++++
                +   DEBUG PRINTS AND BUTTONS    +
@@ -70,10 +106,6 @@ struct SwipeEngineView: View {
             }
             
             
-            Text(DataManager.sharedInstance.testString)
-                .foregroundColor(.green)
-            
-            
             Button(action: {
                 self.server.fetchUsers_allIDs() {(userList) in
                     printWeight2 = userList.count
@@ -89,7 +121,6 @@ struct SwipeEngineView: View {
             
             
             
-            Spacer()
             
             
         }
