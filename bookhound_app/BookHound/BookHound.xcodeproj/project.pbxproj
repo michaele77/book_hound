@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		27315B08265B185700873924 /* OpenAppView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27315B07265B185700873924 /* OpenAppView.swift */; };
 		274FD8992634E420007C0019 /* Alamofire in Frameworks */ = {isa = PBXBuildFile; productRef = 274FD8982634E420007C0019 /* Alamofire */; };
 		274FD8E6263690E2007C0019 /* ServerLink.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274FD89D2634E459007C0019 /* ServerLink.swift */; };
 		274FD8EB263E71ED007C0019 /* DataManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = 274FD8EA263E71AB007C0019 /* DataManager.swift */; };
@@ -44,6 +45,7 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		27315B07265B185700873924 /* OpenAppView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = OpenAppView.swift; sourceTree = "<group>"; };
 		274FD89D2634E459007C0019 /* ServerLink.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ServerLink.swift; sourceTree = "<group>"; };
 		274FD8EA263E71AB007C0019 /* DataManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DataManager.swift; sourceTree = "<group>"; };
 		278E66662622C10300ABF178 /* BookHound.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = BookHound.app; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -124,6 +126,7 @@
 			isa = PBXGroup;
 			children = (
 				274FD8EA263E71AB007C0019 /* DataManager.swift */,
+				27315B07265B185700873924 /* OpenAppView.swift */,
 				27BE3301265A3BF4002D0D1B /* ParamConfig.swift */,
 				274FD89D2634E459007C0019 /* ServerLink.swift */,
 				278E66692622C10300ABF178 /* BookHoundApp.swift */,
@@ -310,6 +313,7 @@
 				278E666C2622C10300ABF178 /* ContentView.swift in Sources */,
 				278E66B1262419CF00ABF178 /* DBManager.swift in Sources */,
 				274FD8E6263690E2007C0019 /* ServerLink.swift in Sources */,
+				27315B08265B185700873924 /* OpenAppView.swift in Sources */,
 				278E66982622C15C00ABF178 /* initialSelectionView.swift in Sources */,
 				27BE3302265A3BF4002D0D1B /* ParamConfig.swift in Sources */,
 				278E666A2622C10300ABF178 /* BookHoundApp.swift in Sources */,

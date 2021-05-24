@@ -16,7 +16,8 @@ struct BookHoundApp: App {
     var body: some Scene {
         
         WindowGroup {
-            initialSelectionView()
+            OpenAppView()
+//            initialSelectionView()
         }
     }
 }

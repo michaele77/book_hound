@@ -13,7 +13,7 @@ import Foundation
 
 struct ParamConfig {
     // Initial book-selector weights
-    static let initSelWeight: Float = 5.0
+    static let initSelWeight: Float = 20.0
     
     // Cardinal swipe weights
     static let read_bad: Float      = -2.0

@@ -24,8 +24,10 @@ class DataManager {
     var bookScoreDict: [Int: Float] = [:]
     var sortedBookKeys: [Int] = []
     
+    // This is the set of all books we've seen
+    // Use this to make sure we dont re-recommend books
+    var encounteredBooks: Set<Int> = []
     let server = serverLink()
-    
     var cachedBook = Book()
      
     
@@ -81,13 +83,29 @@ class DataManager {
         return self.bookScoreDict[ self.sortedBookKeys[index] ] ?? 0
     }
     
+    // Simple helper to pop the sorted book keys list any encountered IDs
+    func removeEncountered() {
+        while true {
+            if self.encounteredBooks.contains(self.sortedBookKeys.last ?? -1) {
+                let tmpVar = self.sortedBookKeys.popLast()
+                print("     //\\ Popped book ID \(tmpVar)")
+            } else {
+                break
+            }
+        }
+    }
+    
     // Helper function to update the bookScore dictionary sort
     // Sort the helper dictionary by value and output the keys into the shared instance variable
     // This should be called everytime we want to retrieve the top book
+    // In this function, make sure to delete any books we've seen already
     func sortBookKeys(completion: @escaping (Book) -> Void) {
         // 1-liner to sort by values and return the keys
-        self.sortedBookKeys = Array(self.bookScoreDict.keys).sorted(by: {self.bookScoreDict[$0]! > self.bookScoreDict[$1]!})
-        let topKey = self.sortedBookKeys[0]
+        self.sortedBookKeys = Array(self.bookScoreDict.keys).sorted(by: {self.bookScoreDict[$0]! < self.bookScoreDict[$1]!})
+        removeEncountered()
+        let topKey = self.sortedBookKeys.last ?? -1
+        let endIndx = self.sortedBookKeys.count-1
+        
         
         // Get some more debug prints for testing...
         // Test top key
@@ -103,12 +121,13 @@ class DataManager {
         // We can print other useful stuff from the top key
         print("See the top books below:")
         for i in 0...5 {
-            let thisBookId = self.sortedBookKeys[i]
+            let thisBookId = self.sortedBookKeys[endIndx-i]
             self.server.fetchBook_byID(bookID: thisBookId) { bookData in
-                print("  ~index \(i) --> book ID is \(thisBookId), with name \(bookData.title) with score of \(self.grabBookScore(index: i))")
+                print("  ~index \(endIndx-i) --> book ID is \(thisBookId), with name \(bookData.title) with score of \(self.grabBookScore(index: endIndx-i))")
             }
             
         }
+        
         
         print("~~~~~~DONE with Data manager sort!")
         
@@ -176,16 +195,15 @@ class DataManager {
     
     // Function to update match score dictionary with preffered initialized favorite book
     // Singular version of similar functin below
-    // Return 1 if successfully got a fully scraped book, 2 if we did not get a fully scraped book
+    // MODIFICATION: add add value as input; that way we can reuse this function both for favorite book initialization as well as in the swipe engine
     
     // NOTE: after we update our match scores, we also want to get the nearest neigbor books of the current book
     // THEN, use the updated match scores and users to update all of the book scores in our bookScore dictionary
     // Need to do this here to avoid data race conditions in the view files
-    func updateFavoriteMatch(book: Int) {
+    func updateFavoriteMatch(book: Int, updateWeight: Float) {
         // We are given an array of book IDs representing favorite books
         // For each book, we want to update all match scores of linked users that like this book
-//        let favUpdateVal: Float = 5.0 // Pretty high increment value! fiddle with this to change starting state
-        let favUpdateVal = ParamConfig.initSelWeight
+        self.encounteredBooks.insert(book) // Update our encountered books set
         
         self.server.fetchBook_byID(bookID: book) { (bookData) in
             // Closure code
@@ -204,7 +222,7 @@ class DataManager {
                     if (seenSet.contains(curUser)) {
                         print(" ~We have seen a repeat (on user \(curUser))")
                     } else {
-                        self.matchScoreDict[curUser] = curVal + favUpdateVal
+                        self.matchScoreDict[curUser] = curVal + updateWeight
                         seenSet.insert(curUser)
                     }
                     
@@ -263,6 +281,9 @@ class DataManager {
         
                 
     }
+    
+    
+
     
         
     

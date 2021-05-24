@@ -102,9 +102,13 @@ class serverLink {
         // Books to fetch:
         // kingkiller chronicles: 186074
         // 3 body problem: 20518872
-        // HP 1: 3
         // LOTR: 119
         // Gun slinger: 43615
+        // Poppy war book 2: 42800305
+        // Blood Song book 1: 13569581
+        // Way of Kings book 1: 7235533
+        
+        // HP 1: 3
         
         AF.request("http://192.168.1.72:8084/fetchBook?bookID=" + String(bookID)).responseJSON {
             response in
