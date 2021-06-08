@@ -91,6 +91,8 @@ class serverLink {
     var cachedBook = Book()
     var cachedUserIDs: Set<Int> = []
     var cachedBookIDs: Set<Int> = []
+//    let currentIP = '192.168.1.72' // Kaiser IP address
+    let currentIP = "10.0.0.36" // 3026 IP address
     
     init() {
        print("initializing serverLink class~~")
@@ -108,9 +110,17 @@ class serverLink {
         // Blood Song book 1: 13569581
         // Way of Kings book 1: 7235533
         
+        
+        // For mom:
+        // hunt for red october: 19691
+        // the shining: 11588
+        // It: 18342
+        // The stand: 149267
+        // Pet cemetery: 33124137
+        
         // HP 1: 3
         
-        AF.request("http://192.168.1.72:8084/fetchBook?bookID=" + String(bookID)).responseJSON {
+        AF.request("http://" + currentIP + ":8084/fetchBook?bookID=" + String(bookID)).responseJSON {
             response in
             print(response.data)
             let data = String(data: response.data!, encoding: .utf8)
@@ -142,7 +152,7 @@ class serverLink {
     
     
     func fetchUsers_allIDs(completion: @escaping ([Int]) -> Void) {
-        AF.request("http://192.168.1.72:8084/fetchAllUserIDs").responseJSON {
+        AF.request("http://" + currentIP + ":8084/fetchAllUserIDs").responseJSON {
             response in
             
             let data = String(data: response.data!, encoding: .utf8)
@@ -170,7 +180,7 @@ class serverLink {
     
     
     func fetchBooks_allIDs(completion: @escaping ([Int]) -> Void) {
-        AF.request("http://192.168.1.72:8084/fetchAllBookIDs").responseJSON {
+        AF.request("http://" + currentIP + ":8084/fetchAllBookIDs").responseJSON {
             response in
             
             let data = String(data: response.data!, encoding: .utf8)
@@ -195,7 +205,7 @@ class serverLink {
     
     
     func fetchFirstOrder(bookID: Int, completion: @escaping ([nearestTriplet]) -> Void) {
-        AF.request("http://192.168.1.72:8084/fetchFirstOrder?bookID=" + String(bookID)).responseJSON {
+        AF.request("http://" + currentIP + ":8084/fetchFirstOrder?bookID=" + String(bookID)).responseJSON {
             response in
             
             let data = String(data: response.data!, encoding: .utf8)

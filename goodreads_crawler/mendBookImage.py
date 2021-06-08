@@ -75,7 +75,8 @@ def get_page(fnc_url_link):
     soup_toreturn = BeautifulSoup(driver.page_source, 'html.parser')
     rand_adder = random.uniform(0,2) ## Wait an additional 0 to 10 seconds
     print("Going to wait for {0} seconds".format(1+rand_adder))
-    time.sleep(1)
+    # time.sleep(1)
+    time.sleep(0.75)
 
     return soup_toreturn
 
@@ -203,6 +204,10 @@ if __name__ == "__main__":
     DB_users = [*userCol.find()]
 
     checkList = []
+    # Create  set to track which IDs cant be found on goodreads (inexplicibly)
+    # Update this manually and check this during the while loop
+    cantFindSet = set()
+    cantFindSet.add(52220303)
 
     ## BEFORE WE LOOP, let's sort through all of the books by order of users pointing to them!
     ## That way we can take care of the most popular books first
@@ -221,7 +226,7 @@ if __name__ == "__main__":
         #     print("Got a full param book!")
 
 
-        if 'dateUpdated' not in curBook.keys():
+        if 'dateUpdated' not in curBook.keys() and int(curBook["_id"]) not in cantFindSet:
             print('scraping book {0}'.format(curBook['title']))
             ID_toScrape = curBook["_id"]
             book_reference_number = int(ID_toScrape)
@@ -314,7 +319,10 @@ if __name__ == "__main__":
 
 
         else:
-            print('Skipped book {0}, since fullParam was {1}'.format(curBook['title'], curBook['fullParameter']))
+            if 'dateUpdated' in curBook.keys():
+                print('Skipped book {0}, since fullParam was {1}'.format(curBook['title'], curBook['fullParameter']))
+            elif curBook['_id'] in cantFindSet:
+                print('Skipped book {0}, since it was in cant find set'.format(curBook['title']))
 
 
 
